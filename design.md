@@ -15,3 +15,9 @@ GCLOUD_PROJECT | project_id from key.json
 GCLOUD_KEY     | key.json for a [service account](https://cloud.google.com/compute/docs/access/service-accounts)
 APP_APK        | app apk to test
 TEST_APK       | test apk containing tests to execute
+
+## To Do
+
+- [ ] Run instrumentation tests given app/test apk
+- [ ] Run Robo tests given only app apk
+- [ ] Download coverage.ec
