@@ -5,32 +5,87 @@ import (
 	"os"
 	// "os/exec"
 	"encoding/base64"
+	"io/ioutil"
+	"encoding/json"
+	"path"
 )
 
-func main() {
-	fmt.Println("GCLOUD_USER:", os.Getenv("GCLOUD_USER")) // optional. can be read from gcloud key
-	fmt.Println("GCLOUD_PROJECT:", os.Getenv("GCLOUD_PROJECT")) // optional. can be read from gcloud key
-	fmt.Println("GCLOUD_KEY:", os.Getenv("GCLOUD_KEY")) // required
-
-	// TODO: check app / test apk exist
-	fmt.Println("APP_APK:", os.Getenv("APP_APK")) // required
-	fmt.Println("TEST_APK:", os.Getenv("TEST_APK")) // optional. robo tests don't use a test apk
-
-	// TODO: check gcloud exists
-
-	gcloud_key, err := base64.StdEncoding.DecodeString(os.Getenv("GCLOUD_KEY"))
+func checkError(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
 
-	// TODO: write this to $HOME/gcloudkey.json
-	fmt.Println("GCLOUD_KEY decoded:", gcloud_key)
+func getOptionalEnv(env string) string {
+	return os.Getenv(env)
+}
+
+func getRequiredEnv(env string) string {
+	if len(env) == 0 {
+		panic(env + " is not defined!")
+	}
+
+	return os.Getenv(env)
+}
+
+func isEmpty(str string) bool {
+	return len(str) == 0
+}
+
+func checkFileExists(filePath string) bool {
+	_, err := os.Stat(filePath)
+	return err == nil
+}
+
+type GcloudKeyFile struct {
+	ProjectID   string `json:"project_id"`
+	ClientEmail string `json:"client_email"`
+}
+
+func main() {
+	gcloud_user := ""    //getOptionalEnv("GCLOUD_USER")
+	gcloud_project := "" //getOptionalEnv("GCLOUD_PROJECT")
+
+	app_apk := getRequiredEnv("APP_APK")
+	checkFileExists(app_apk)
+
+	test_apk := getOptionalEnv("TEST_APK")
+	if !isEmpty(test_apk) {
+		checkFileExists(test_apk)
+	}
+
+	gcloud_key, err := base64.StdEncoding.DecodeString(getRequiredEnv("GCLOUD_KEY"))
+	checkError(err)
+
+	empty_gcloud_user := isEmpty(gcloud_user)
+	empty_gcloud_project := isEmpty(gcloud_project)
+
+	if empty_gcloud_user || empty_gcloud_project {
+		parsedKeyFile := GcloudKeyFile{}
+		json.Unmarshal([]byte(gcloud_key), &parsedKeyFile)
+
+		if empty_gcloud_user {
+			gcloud_user = parsedKeyFile.ClientEmail
+			if isEmpty(gcloud_user) { panic("Missing gcloud user") }
+		}
+
+		if empty_gcloud_project {
+			gcloud_project = parsedKeyFile.ProjectID
+			if isEmpty(gcloud_project) { panic("Missing gcloud project") }
+		}
+	}
+
+	fmt.Println("User: ", gcloud_user)
+	fmt.Println("Project: ", gcloud_project)
+	fmt.Println("App APK: ", app_apk)
+	fmt.Println("Test APK: ", app_apk)
+
+	home_dir := getRequiredEnv("HOME")
+	checkError(ioutil.WriteFile(path.Join(home_dir, "gcloudkey.json"), gcloud_key, 0644))
 
 	/*
-	    echo $GCLOUD_KEY | base64 --decode > "$HOME/gcloudkey.json"
-        gcloud config set project "$GCLOUD_PROJECT"
-        gcloud auth activate-service-account --key-file "$HOME/gcloudkey.json" "$GCLOUD_USER"
-
+		gcloud config set project "$GCLOUD_PROJECT"
+		gcloud auth activate-service-account --key-file "$HOME/gcloudkey.json" "$GCLOUD_USER"
 	*/
 
 	// TODO: allow configuration options
