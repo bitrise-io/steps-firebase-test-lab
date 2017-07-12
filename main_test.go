@@ -19,16 +19,23 @@ import (
 const PATH = "PATH"
 
 func resetEnv() {
-	home := getRequiredEnv(HOME)
-	path := getRequiredEnv("PATH")
+	home := os.Getenv(HOME)
+	path := os.Getenv(PATH)
 
 	os.Clearenv()
 	os.Setenv(HOME, home)
 	os.Setenv(PATH, path)
 }
 
+func checkError(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
 func TestHello(t *testing.T) {
-	gcloud_key := getRequiredEnv(GCLOUD_KEY)
+	gcloud_key, err := getRequiredEnv(GCLOUD_KEY)
+	checkError(err)
 	resetEnv()
 	os.Setenv(GCLOUD_KEY, gcloud_key)
 
@@ -44,11 +51,11 @@ func TestHello(t *testing.T) {
 	test_apk_path := "/tmp/app.apk"
 	app_apk_path := "/tmp/test.apk"
 
-	if !checkFileExists(test_apk_path) {
+	if fileExists(test_apk_path) != nil {
 		ioutil.WriteFile(test_apk_path, nil, 0644)
 	}
 
-	if !checkFileExists(app_apk_path) {
+	if fileExists(app_apk_path) != nil {
 		ioutil.WriteFile(app_apk_path, nil, 0644)
 	}
 

@@ -13,6 +13,7 @@ import (
 	"math/rand"
 	"github.com/kballard/go-shellquote"
 	"os/exec"
+	"errors"
 )
 
 const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -30,32 +31,29 @@ func gcsObjectName() string {
 	return time.Now().Format("2006-01-02_3:04:05.999999") + "_" + string(bytes)
 }
 
-func checkError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 func getOptionalEnv(env string) string {
 	return os.Getenv(env)
 }
 
-func getRequiredEnv(env string) string {
+func getRequiredEnv(env string) (string, error) {
 	result := os.Getenv(env)
 	if len(result) == 0 {
-		panic(env + " is not defined!")
+		return "", errors.New(env + " is not defined!")
 	}
 
-	return result
+	return result, nil
 }
 
 func isEmpty(str string) bool {
 	return len(str) == 0
 }
 
-func checkFileExists(filePath string) bool {
+func fileExists(filePath string) error {
 	_, err := os.Stat(filePath)
-	return err == nil
+	if err != nil {
+		return errors.New("file doesn't exist: '" + filePath + "'")
+	}
+	return nil
 }
 
 type GcloudKeyFile struct {
@@ -63,11 +61,11 @@ type GcloudKeyFile struct {
 	ClientEmail string `json:"client_email"`
 }
 
-func runCommand(cmd string) {
+func runCommand(cmd string) error {
 	cmdSlice := strings.Fields(cmd)
 
 	cmdObj := command.NewWithStandardOuts(cmdSlice[0], cmdSlice[1:]...)
-	checkError(cmdObj.Run())
+	return cmdObj.Run()
 }
 
 // Env string names
@@ -93,20 +91,29 @@ type FirebaseConfig struct {
 	TestApk       string
 }
 
-func populateConfig() FirebaseConfig {
+func populateConfig() (FirebaseConfig, error) {
+	empty := FirebaseConfig{}
+
 	gcloud_user := getOptionalEnv(GCLOUD_USER)
 	gcloud_project := getOptionalEnv(GCLOUD_PROJECT)
 
-	app_apk := getRequiredEnv(APP_APK)
-	checkFileExists(app_apk)
+	app_apk, err := getRequiredEnv(APP_APK)
+	if err != nil { return empty, err }
+
+	err = fileExists(app_apk)
+	if err != nil { return empty, err }
 
 	test_apk := getOptionalEnv(TEST_APK)
 	if !isEmpty(test_apk) {
-		checkFileExists(test_apk)
+		err = fileExists(test_apk)
+		if err != nil { return empty, err }
 	}
 
-	gcloud_key, err := base64.StdEncoding.DecodeString(getRequiredEnv(GCLOUD_KEY))
-	checkError(err)
+	gcloud_key_base64, err := getRequiredEnv(GCLOUD_KEY)
+	if err != nil { return empty, err }
+
+	gcloud_key, err := base64.StdEncoding.DecodeString(gcloud_key_base64)
+	if err != nil { return empty, err }
 
 	empty_gcloud_user := isEmpty(gcloud_user)
 	empty_gcloud_project := isEmpty(gcloud_project)
@@ -118,55 +125,65 @@ func populateConfig() FirebaseConfig {
 		if empty_gcloud_user {
 			gcloud_user = parsedKeyFile.ClientEmail
 			if isEmpty(gcloud_user) {
-				panic("GCLOUD_USER not defined in env or gcloud key")
+				if err != nil { return empty, errors.New("GCLOUD_USER not defined in env or gcloud key") }
 			}
 		}
 
 		if empty_gcloud_project {
 			gcloud_project = parsedKeyFile.ProjectID
 			if isEmpty(gcloud_project) {
-				panic("GCLOUD_PROJECT not defined in env or gcloud key")
+				if err != nil  { return empty, errors.New("GCLOUD_PROJECT not defined in env or gcloud key") }
 			}
 		}
 	}
 
-	home_dir := getRequiredEnv(HOME)
+	home_dir, err := getRequiredEnv(HOME)
+	if err != nil { return empty, err }
+
 	key_file_path := path.Join(home_dir, "gcloudkey.json")
-	checkError(ioutil.WriteFile(key_file_path, gcloud_key, 0644))
+	err = ioutil.WriteFile(key_file_path, gcloud_key, 0644)
+	if err != nil { return empty, err }
+
+	gcloud_bucket_value, err := getRequiredEnv(GCLOUD_BUCKET)
+	if err != nil { return empty, err }
+
+	gcloud_options_value, err := getRequiredEnv(GCLOUD_OPTIONS)
+	if err != nil { return empty, err }
 
 	return FirebaseConfig{
-		ResultsBucket: getRequiredEnv(GCLOUD_BUCKET),
+		ResultsBucket: gcloud_bucket_value,
 		User:          gcloud_user,
 		Project:       gcloud_project,
 		KeyPath:       key_file_path,
 		AppApk:        app_apk,
 		TestApk:       test_apk,
-		Options:       getRequiredEnv(GCLOUD_OPTIONS),
-	}
+		Options:      gcloud_options_value,
+	}, nil
 }
 
-func exportGcsDir(bucket string, object string) {
+func exportGcsDir(bucket string, object string) error {
 	gcs_results_dir := "gs://" + bucket + "/" + object
 	fmt.Println("Exporting ", GCS_RESULTS_DIR, " ", gcs_results_dir)
 	cmdLog, err := exec.Command("bitrise", "envman", "add", "--key", GCS_RESULTS_DIR, "--value", gcs_results_dir).CombinedOutput()
 	if err != nil {
-
-		panic(fmt.Sprintf("Failed to export "+GCS_RESULTS_DIR+", error: %#v | output: %s", err.Error(), cmdLog))
+		return errors.New(fmt.Sprintf("Failed to export "+GCS_RESULTS_DIR+", error: %#v | output: %s", err.Error(), cmdLog))
 	}
+
+	return nil
 }
 
-func executeGcloud(debug bool) {
-	config := populateConfig()
+func executeGcloud(debug bool) error {
+	config, err := populateConfig()
+	if err != nil  { return err }
 
 	if !debug {
 		runCommand("gcloud config set project " + config.Project)
 		runCommand("gcloud auth activate-service-account --key-file " + config.KeyPath + " " + config.User)
 	}
 
-	// todo: input variable support
 	// https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
 	gcloudOptions, err := shellquote.Split(config.Options)
-	checkError(err)
+	if err != nil  { return err }
 	fmt.Println("user options: ", gcloudOptions)
 
 	// TODO: skip setting by default if these flags were specified by the user
@@ -189,9 +206,17 @@ func executeGcloud(debug bool) {
 
 	exportGcsDir(config.ResultsBucket, gcs_object)
 
-	os.Exit(0)
+	return nil
 }
 
 func main() {
-	executeGcloud(false)
+	err := executeGcloud(false)
+
+	if err != nil {
+		fmt.Println("Error: ", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Finished!")
+	os.Exit(0)
 }
