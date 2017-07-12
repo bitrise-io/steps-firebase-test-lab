@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
-	// "os/exec"
 	"encoding/base64"
 	"io/ioutil"
 	"encoding/json"
 	"path"
+	"github.com/bitrise-io/go-utils/cmdex"
 )
 
 func checkError(err error) {
@@ -40,6 +40,10 @@ func checkFileExists(filePath string) bool {
 type GcloudKeyFile struct {
 	ProjectID   string `json:"project_id"`
 	ClientEmail string `json:"client_email"`
+}
+
+func quote(str string) string {
+	return "\"" + str + "\""
 }
 
 func main() {
@@ -87,6 +91,13 @@ func main() {
 		gcloud config set project "$GCLOUD_PROJECT"
 		gcloud auth activate-service-account --key-file "$HOME/gcloudkey.json" "$GCLOUD_USER"
 	*/
+
+
+	cmdSlice := []string{"gcloud", "config", "set", "project", quote(gcloud_project)}
+	cmd := cmdex.NewCommand(cmdSlice[0], cmdSlice[1:]...)
+	cmd.SetStdout(os.Stdout)
+	cmd.SetStderr(os.Stderr)
+	cmd.Run()
 
 	// TODO: allow configuration options
 
