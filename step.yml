@@ -71,6 +71,7 @@ inputs:
       description: |
         https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
       is_required: true
+      is_expand: true
   - GCLOUD_OPTIONS:
     opts:
       title: "Gcloud Options"
@@ -78,6 +79,7 @@ inputs:
       description: |
         https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
       is_required: true
+      is_expand: true
   - APP_APK:
     opts:
       title: "App APK to test"
@@ -85,12 +87,14 @@ inputs:
       description: |
         https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
       is_required: true
+      is_expand: true
   - TEST_APK:
     opts:
       title: "Test APK to test"
       summary: Test APK to run on Firebase Test Lab. Not required for robo tests.
       description: |
         https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
+      is_expand: true
   - GCLOUD_USER:
     opts:
       category: Config
@@ -98,6 +102,7 @@ inputs:
       summary: Gcloud user. Read from keyfile when omitted.
       description: |
         https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
+      is_expand: true
   - GCLOUD_PROJECT:
     opts:
       category: Config
@@ -105,6 +110,7 @@ inputs:
       summary: Gcloud project. Read from keyfile when omitted
       description: |
         https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
+      is_expand: true
 
 outputs:
   - GCS_RESULTS_DIR:
