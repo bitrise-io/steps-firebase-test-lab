@@ -9,7 +9,27 @@ import (
 	"path"
 	"github.com/bitrise-io/go-utils/command"
 	"strings"
+	"time"
+	"math/rand"
+	"github.com/kballard/go-shellquote"
+	"os/exec"
+	"github.com/bitrise-tools/gows/config"
 )
+
+const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+// Matches api_lib/firebase/test/arg_validate.py _GenerateUniqueGcsObjectName from gcloud SDK
+// Example output: 2017-07-12_11:36:12.467586_XVlB
+func gcsObjectName() string {
+	letterCount := 4
+	bytes := make([]byte, letterCount)
+
+	for i := 0; i < letterCount; i++ {
+		bytes[i] = letters[rand.Intn(len(letters))]
+	}
+
+	return time.Now().Format("2006-01-02_3:04:05.999999") + "_" + string(bytes)
+}
 
 func checkError(err error) {
 	if err != nil {
@@ -44,26 +64,45 @@ type GcloudKeyFile struct {
 }
 
 func runCommand(cmd string) {
-	cmdSlice :=  strings.Fields(cmd)
+	cmdSlice := strings.Fields(cmd)
 
 	cmdObj := command.NewWithStandardOuts(cmdSlice[0], cmdSlice[1:]...)
 	checkError(cmdObj.Run())
 }
 
-func main() {
-	// todo: refactor this into a method which populates a struct
-	gcloud_user := ""    //getOptionalEnv("GCLOUD_USER")
-	gcloud_project := "" //getOptionalEnv("GCLOUD_PROJECT")
+// Env string names
+const GCLOUD_USER = "GCLOUD_USER"
+const GCLOUD_PROJECT = "GCLOUD_PROJECT"
+const GCLOUD_BUCKET = "GCLOUD_BUCKET"
+const GCLOUD_OPTIONS = "GCLOUD_OPTIONS"
+const APP_APK = "APP_APK"
+const TEST_APK = "TEST_APK"
+const GCLOUD_KEY = "GCLOUD_KEY"
+const GCS_RESULTS_DIR = "GCS_RESULTS_DIR"
 
-	app_apk := getRequiredEnv("APP_APK")
+type FirebaseConfig struct {
+	ResultsBucket string
+	Options       string
+	User          string
+	Project       string
+	KeyPath       string
+	AppApk        string
+	TestApk       string
+}
+
+func populateConfig() FirebaseConfig {
+	gcloud_user := getOptionalEnv(GCLOUD_USER)
+	gcloud_project := getOptionalEnv(GCLOUD_PROJECT)
+
+	app_apk := getRequiredEnv(APP_APK)
 	checkFileExists(app_apk)
 
-	test_apk := getOptionalEnv("TEST_APK")
+	test_apk := getOptionalEnv(TEST_APK)
 	if !isEmpty(test_apk) {
 		checkFileExists(test_apk)
 	}
 
-	gcloud_key, err := base64.StdEncoding.DecodeString(getRequiredEnv("GCLOUD_KEY"))
+	gcloud_key, err := base64.StdEncoding.DecodeString(getRequiredEnv(GCLOUD_KEY))
 	checkError(err)
 
 	empty_gcloud_user := isEmpty(gcloud_user)
@@ -88,87 +127,69 @@ func main() {
 		}
 	}
 
-	fmt.Println("User: ", gcloud_user)
-	fmt.Println("Project: ", gcloud_project)
-	fmt.Println("App APK: ", app_apk)
-	fmt.Println("Test APK: ", app_apk)
-
 	home_dir := getRequiredEnv("HOME")
 	key_file_path := path.Join(home_dir, "gcloudkey.json")
 	checkError(ioutil.WriteFile(key_file_path, gcloud_key, 0644))
 
-	runCommand("gcloud config set project " + gcloud_project)
-	runCommand("gcloud auth activate-service-account --key-file " + key_file_path + " " + gcloud_user )
+	return FirebaseConfig{
+		ResultsBucket: getRequiredEnv(GCLOUD_BUCKET),
+		User:          gcloud_user,
+		Project:       gcloud_project,
+		KeyPath:       key_file_path,
+		AppApk:        app_apk,
+		TestApk:       test_apk,
+		Options:       getRequiredEnv(GCLOUD_OPTIONS),
+	}
+}
 
-	// TODO: allow configuration options
-	// TODO: how to grab stdout from executed command
 
-	/*
-	device_ids := "NexusLowRes"
-	api_level := 25
+func exportGcsDir(bucket string, object string) {
+	gcs_results_dir := "gs://" +bucket + "/" + object
+	fmt.Println("Exporting ", GCS_RESULTS_DIR, " ", gcs_results_dir)
+	cmdLog, err := exec.Command("bitrise", "envman", "add", "--key", GCS_RESULTS_DIR, "--value", gcs_results_dir).CombinedOutput()
+	if err != nil {
+		fmt.Printf("Failed to export "+GCS_RESULTS_DIR+", error: %#v | output: %s", err, cmdLog)
+		os.Exit(1)
+	}
+}
+
+func main() {
+	config := populateConfig()
+	fmt.Println("Config: ", config)
+
+	runCommand("gcloud config set project " + config.Project)
+	runCommand("gcloud auth activate-service-account --key-file " + config.KeyPath + " " + config.User)
+
+	// https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
+	gcloudOptions, err := shellquote.Split(config.Options)
+	checkError(err)
+	fmt.Println("user options: ", gcloudOptions)
+
+	// todo: may require all args to be supplied by user
+	args := make([]string, 0)
 
 	test_type := "robo"
 
-	if !isEmpty(test_apk) {
+	if !isEmpty(config.TestApk) {
 		test_type = "instrumentation"
+		args = append(args, "--test", config.TestApk)
+		args = append(args, "--directories-to-pull=/sdcard")
 	}
-	*/
 
-	/*
-    @device_ids = %w[NexusLowRes]
-    @api_level  = 25
+	args = append(args, test_type)
+	args = append(args, "--app", config.AppApk)
+	args = append(args, "--device-ids", "NexusLowRes")
+	args = append(args, "--os-version-ids", "25")
+	args = append(args, "--locales", "en")
+	args = append(args, "--orientations", "portrait")
+	args = append(args, "--timeout", "25m")
+	args = append(args, "--results-bucket="+config.ResultsBucket)
+	gcs_object := gcsObjectName()
+	args = append(args, "--results-dir="+gcs_object)
 
-    if @robo
-      type = '--type robo'
-    else
-      type         = '--type instrumentation'
-      test_apk     = %Q(--test "#{ENV['TEST_APK']}")
-      sd_card_path = '--directories-to-pull=/sdcard'
-    end
+	fmt.Println("args: ", args)
 
-    flags = [
-        type,
-        %Q(--app "#{ENV['APP_APK']}"),
-        test_apk,
-        "--results-bucket android-#{@app_name}",
-        "--device-ids #{@device_ids.join(',')}",
-        "--os-version-ids #{@api_level}",
-        '--locales en',
-        '--orientations portrait',
-        '--timeout 25m',
-        sd_card_path
-    ].reject &:nil?
+	exportGcsDir(config.ResultsBucket, gcs_object)
 
-    flags << %Q(--test-targets "#{@test_targets}") unless @test_targets.empty?
-
-    # must use custom env separator or gcloud CLI will get confused on comma separated annotations
-    if @opts[:coverage] || @annotations
-      env_vars      = []
-      env_vars      += ['coverage=true', 'coverageFile=/sdcard/coverage.ec'] if @opts[:coverage]
-      env_vars      += ["annotation=#{@annotations}"] if @annotations
-      env_separator = ':'
-      flags << "--environment-variables ^#{env_separator}^#{env_vars.join(env_separator)}"
-    end
-
-    gcloud firebase test android run FLAGS
-
-
-    parse bucket link from gcloud CLI
-
-
-    // download firebase.ec
-
-    bucket = 'gs:/' + bucket_link.split('storage/browser').last
-    bucket = "#{bucket}#{@device_ids.first}-#{@api_level}-en-portrait/artifacts/coverage.ec"
-    _run_command "gsutil cp #{bucket} /bitrise/src/#{@app_name}/app/build/firebase.ec"
-	*/
-
-	// TODO: use exit code from gcloud CLI
-
-	//
-	// --- Exit codes:
-	// The exit code of your Step is very important. If you return
-	//  with a 0 exit code `bitrise` will register your Step as "successful".
-	// Any non zero exit code will be registered as "failed" by `bitrise`.
 	os.Exit(0)
 }
