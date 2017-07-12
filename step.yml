@@ -72,7 +72,6 @@ inputs:
         https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
       is_expand: false
       is_required: false
-      value_options: []
   - GCLOUD_PROJECT:
     opts:
       title: "Gcloud project"
@@ -81,7 +80,6 @@ inputs:
         https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
       is_expand: false
       is_required: false
-      value_options: []
   - GCLOUD_BUCKET:
     opts:
       title: "Gcloud bucket"
@@ -90,7 +88,6 @@ inputs:
         https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
       is_expand: true
       is_required: true
-      value_options: []
   - GCLOUD_OPTIONS:
     opts:
       title: "Gcloud Options"
@@ -99,7 +96,6 @@ inputs:
         https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
       is_expand: true
       is_required: true
-      value_options: []
   - APP_APK:
     opts:
       title: "App APK to test"
@@ -108,7 +104,6 @@ inputs:
         https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
       is_expand: true
       is_required: true
-      value_options: []
   - TEST_APK:
     opts:
       title: "Test APK to test"
@@ -117,7 +112,6 @@ inputs:
         https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
       is_expand: true
       is_required: false
-      value_options: []
 
 outputs:
   - GCS_RESULTS_DIR:
