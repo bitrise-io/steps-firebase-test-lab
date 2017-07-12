@@ -216,7 +216,5 @@ func main() {
 		fmt.Println("Error: ", err)
 		os.Exit(1)
 	}
-
-	fmt.Println("Finished!")
 	os.Exit(0)
 }
