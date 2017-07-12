@@ -68,7 +68,7 @@ inputs:
     opts:
       category: Test
       title: "Gcloud bucket"
-      summary: 1. Gcloud bucket where test folders will be stored
+      summary: Gcloud bucket where test folders will be stored
       description: |
         https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
       is_required: true
@@ -77,7 +77,7 @@ inputs:
     opts:
       category: Test
       title: "Gcloud Options"
-      summary: Gcloud firebase options. Specifies tests to run, devices to use, etc.
+      summary: --app, --test, --results-bucket, --results-dir and test type are set automatically when omitted.
       description: |
         https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
       is_required: true

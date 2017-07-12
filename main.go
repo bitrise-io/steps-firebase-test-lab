@@ -13,7 +13,6 @@ import (
 	"math/rand"
 	"github.com/kballard/go-shellquote"
 	"os/exec"
-	"github.com/bitrise-tools/gows/config"
 )
 
 const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -71,13 +70,13 @@ func runCommand(cmd string) {
 }
 
 // Env string names
-const GCLOUD_USER = "GCLOUD_USER" // optional. read from keyfile
+const GCLOUD_USER = "GCLOUD_USER"       // optional. read from keyfile
 const GCLOUD_PROJECT = "GCLOUD_PROJECT" // optional. read from keyfile
-const GCLOUD_BUCKET = "GCLOUD_BUCKET" // required
+const GCLOUD_BUCKET = "GCLOUD_BUCKET"   // required
 const GCLOUD_OPTIONS = "GCLOUD_OPTIONS" // required
-const APP_APK = "APP_APK" // required
-const TEST_APK = "TEST_APK" // optional
-const GCLOUD_KEY = "GCLOUD_KEY" // required
+const APP_APK = "APP_APK"               // required
+const TEST_APK = "TEST_APK"             // optional
+const GCLOUD_KEY = "GCLOUD_KEY"         // required
 
 // Output from the step
 const GCS_RESULTS_DIR = "GCS_RESULTS_DIR"
@@ -144,9 +143,8 @@ func populateConfig() FirebaseConfig {
 	}
 }
 
-
 func exportGcsDir(bucket string, object string) {
-	gcs_results_dir := "gs://" +bucket + "/" + object
+	gcs_results_dir := "gs://" + bucket + "/" + object
 	fmt.Println("Exporting ", GCS_RESULTS_DIR, " ", gcs_results_dir)
 	cmdLog, err := exec.Command("bitrise", "envman", "add", "--key", GCS_RESULTS_DIR, "--value", gcs_results_dir).CombinedOutput()
 	if err != nil {
@@ -168,29 +166,23 @@ func main() {
 	checkError(err)
 	fmt.Println("user options: ", gcloudOptions)
 
-	// todo: may require all args to be supplied by user
+	// TODO: skip setting by default if these flags were specified by the user
+	// Set --app, --test, --results-bucket, --results-dir and test type
 	args := make([]string, 0)
 
-	test_type := "robo"
-
-	if !isEmpty(config.TestApk) {
-		test_type = "instrumentation"
+	if isEmpty(config.TestApk) {
+		args = append(args, "robo")
+	} else {
+		args = append(args, "instrumentation")
 		args = append(args, "--test", config.TestApk)
-		args = append(args, "--directories-to-pull=/sdcard")
 	}
 
-	args = append(args, test_type)
 	args = append(args, "--app", config.AppApk)
-	args = append(args, "--device-ids", "NexusLowRes")
-	args = append(args, "--os-version-ids", "25")
-	args = append(args, "--locales", "en")
-	args = append(args, "--orientations", "portrait")
-	args = append(args, "--timeout", "25m")
 	args = append(args, "--results-bucket="+config.ResultsBucket)
 	gcs_object := gcsObjectName()
 	args = append(args, "--results-dir="+gcs_object)
 
-	fmt.Println("args: ", args)
+	fmt.Println("auto options: ", args)
 
 	exportGcsDir(config.ResultsBucket, gcs_object)
 
