@@ -7,7 +7,8 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"path"
-	"github.com/bitrise-io/go-utils/cmdex"
+	"github.com/bitrise-io/go-utils/command"
+	"strings"
 )
 
 func checkError(err error) {
@@ -42,11 +43,15 @@ type GcloudKeyFile struct {
 	ClientEmail string `json:"client_email"`
 }
 
-func quote(str string) string {
-	return "\"" + str + "\""
+func runCommand(cmd string) {
+	cmdSlice :=  strings.Fields(cmd)
+
+	cmdObj := command.NewWithStandardOuts(cmdSlice[0], cmdSlice[1:]...)
+	checkError(cmdObj.Run())
 }
 
 func main() {
+	// todo: refactor this into a method which populates a struct
 	gcloud_user := ""    //getOptionalEnv("GCLOUD_USER")
 	gcloud_project := "" //getOptionalEnv("GCLOUD_PROJECT")
 
@@ -70,12 +75,16 @@ func main() {
 
 		if empty_gcloud_user {
 			gcloud_user = parsedKeyFile.ClientEmail
-			if isEmpty(gcloud_user) { panic("Missing gcloud user") }
+			if isEmpty(gcloud_user) {
+				panic("Missing gcloud user")
+			}
 		}
 
 		if empty_gcloud_project {
 			gcloud_project = parsedKeyFile.ProjectID
-			if isEmpty(gcloud_project) { panic("Missing gcloud project") }
+			if isEmpty(gcloud_project) {
+				panic("Missing gcloud project")
+			}
 		}
 	}
 
@@ -85,21 +94,25 @@ func main() {
 	fmt.Println("Test APK: ", app_apk)
 
 	home_dir := getRequiredEnv("HOME")
-	checkError(ioutil.WriteFile(path.Join(home_dir, "gcloudkey.json"), gcloud_key, 0644))
+	key_file_path := path.Join(home_dir, "gcloudkey.json")
+	checkError(ioutil.WriteFile(key_file_path, gcloud_key, 0644))
 
-	/*
-		gcloud config set project "$GCLOUD_PROJECT"
-		gcloud auth activate-service-account --key-file "$HOME/gcloudkey.json" "$GCLOUD_USER"
-	*/
-
-
-	cmdSlice := []string{"gcloud", "config", "set", "project", quote(gcloud_project)}
-	cmd := cmdex.NewCommand(cmdSlice[0], cmdSlice[1:]...)
-	cmd.SetStdout(os.Stdout)
-	cmd.SetStderr(os.Stderr)
-	cmd.Run()
+	runCommand("gcloud config set project " + gcloud_project)
+	runCommand("gcloud auth activate-service-account --key-file " + key_file_path + " " + gcloud_user )
 
 	// TODO: allow configuration options
+	// TODO: how to grab stdout from executed command
+
+	/*
+	device_ids := "NexusLowRes"
+	api_level := 25
+
+	test_type := "robo"
+
+	if !isEmpty(test_apk) {
+		test_type = "instrumentation"
+	}
+	*/
 
 	/*
     @device_ids = %w[NexusLowRes]
