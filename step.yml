@@ -64,18 +64,6 @@ toolkit:
 
 
 inputs:
-  - GCLOUD_USER:
-    opts:
-      title: "Gcloud user"
-      summary: Gcloud user. Read from keyfile when omitted.
-      description: |
-        https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
-  - GCLOUD_PROJECT:
-    opts:
-      title: "Gcloud project"
-      summary: Gcloud project. Read from keyfile when omitted
-      description: |
-        https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
   - GCLOUD_BUCKET:
     opts:
       title: "Gcloud bucket"
@@ -101,6 +89,20 @@ inputs:
     opts:
       title: "Test APK to test"
       summary: Test APK to run on Firebase Test Lab. Not required for robo tests.
+      description: |
+        https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
+  - GCLOUD_USER:
+    opts:
+      category: Config
+      title: "Gcloud user"
+      summary: Gcloud user. Read from keyfile when omitted.
+      description: |
+        https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
+  - GCLOUD_PROJECT:
+    opts:
+      category: Config
+      title: "Gcloud project"
+      summary: Gcloud project. Read from keyfile when omitted
       description: |
         https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
 
