@@ -1,2 +1,4 @@
 .bitrise*
 .gows.user.yml
+.envstore.yml
+_tmp/
