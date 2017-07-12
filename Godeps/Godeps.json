@@ -1,0 +1,23 @@
+{
+	"ImportPath": "github.com/bootstraponline/bitrise-step-firebase-test-lab",
+	"GoVersion": "go1.8",
+	"GodepVersion": "v79",
+	"Deps": [
+		{
+			"ImportPath": "github.com/bitrise-io/go-utils/command",
+			"Rev": "3511af718c64f2ed4e0222e463e5889da972c0a0"
+		},
+		{
+			"ImportPath": "github.com/bitrise-io/go-utils/errorutil",
+			"Rev": "3511af718c64f2ed4e0222e463e5889da972c0a0"
+		},
+		{
+			"ImportPath": "github.com/bitrise-io/go-utils/pathutil",
+			"Rev": "3511af718c64f2ed4e0222e463e5889da972c0a0"
+		},
+		{
+			"ImportPath": "github.com/kballard/go-shellquote",
+			"Rev": "cd60e84ee657ff3dc51de0b4f55dd299a3e136f2"
+		}
+	]
+}
