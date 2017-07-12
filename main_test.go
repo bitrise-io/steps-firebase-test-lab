@@ -27,7 +27,7 @@ func resetEnv() {
 	os.Setenv(PATH, path)
 }
 
-func checkError(err error) {
+func panicOnError(err error) {
 	if err != nil {
 		panic(err)
 	}
@@ -35,7 +35,8 @@ func checkError(err error) {
 
 func TestHello(t *testing.T) {
 	gcloud_key, err := getRequiredEnv(GCLOUD_KEY)
-	checkError(err)
+	panicOnError(err)
+
 	resetEnv()
 	os.Setenv(GCLOUD_KEY, gcloud_key)
 
@@ -62,7 +63,8 @@ func TestHello(t *testing.T) {
 	os.Setenv(APP_APK, test_apk_path)
 	os.Setenv(TEST_APK, app_apk_path)
 
-	executeGcloud(true)
+	err = executeGcloud(true)
+	if err != nil { t.Error(err) }
 }
 
 // t.Error("")
