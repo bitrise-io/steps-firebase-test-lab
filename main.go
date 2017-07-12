@@ -41,11 +41,12 @@ func getOptionalEnv(env string) string {
 }
 
 func getRequiredEnv(env string) string {
-	if len(env) == 0 {
+	result := os.Getenv(env)
+	if len(result) == 0 {
 		panic(env + " is not defined!")
 	}
 
-	return os.Getenv(env)
+	return result
 }
 
 func isEmpty(str string) bool {
@@ -77,6 +78,7 @@ const GCLOUD_OPTIONS = "GCLOUD_OPTIONS" // required
 const APP_APK = "APP_APK"               // required
 const TEST_APK = "TEST_APK"             // optional
 const GCLOUD_KEY = "GCLOUD_KEY"         // required
+const HOME = "HOME"
 
 // Output from the step
 const GCS_RESULTS_DIR = "GCS_RESULTS_DIR"
@@ -116,19 +118,19 @@ func populateConfig() FirebaseConfig {
 		if empty_gcloud_user {
 			gcloud_user = parsedKeyFile.ClientEmail
 			if isEmpty(gcloud_user) {
-				panic("Missing gcloud user")
+				panic("GCLOUD_USER not defined in env or gcloud key")
 			}
 		}
 
 		if empty_gcloud_project {
 			gcloud_project = parsedKeyFile.ProjectID
 			if isEmpty(gcloud_project) {
-				panic("Missing gcloud project")
+				panic("GCLOUD_PROJECT not defined in env or gcloud key")
 			}
 		}
 	}
 
-	home_dir := getRequiredEnv("HOME")
+	home_dir := getRequiredEnv(HOME)
 	key_file_path := path.Join(home_dir, "gcloudkey.json")
 	checkError(ioutil.WriteFile(key_file_path, gcloud_key, 0644))
 
@@ -148,17 +150,18 @@ func exportGcsDir(bucket string, object string) {
 	fmt.Println("Exporting ", GCS_RESULTS_DIR, " ", gcs_results_dir)
 	cmdLog, err := exec.Command("bitrise", "envman", "add", "--key", GCS_RESULTS_DIR, "--value", gcs_results_dir).CombinedOutput()
 	if err != nil {
-		fmt.Printf("Failed to export "+GCS_RESULTS_DIR+", error: %#v | output: %s", err, cmdLog)
-		os.Exit(1)
+
+		panic(fmt.Sprintf("Failed to export "+GCS_RESULTS_DIR+", error: %#v | output: %s", err.Error(), cmdLog))
 	}
 }
 
-func main() {
+func executeGcloud(debug bool) {
 	config := populateConfig()
-	fmt.Println("Config: ", config)
 
-	runCommand("gcloud config set project " + config.Project)
-	runCommand("gcloud auth activate-service-account --key-file " + config.KeyPath + " " + config.User)
+	if !debug {
+		runCommand("gcloud config set project " + config.Project)
+		runCommand("gcloud auth activate-service-account --key-file " + config.KeyPath + " " + config.User)
+	}
 
 	// todo: input variable support
 	// https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
@@ -187,4 +190,8 @@ func main() {
 	exportGcsDir(config.ResultsBucket, gcs_object)
 
 	os.Exit(0)
+}
+
+func main() {
+	executeGcloud(false)
 }
