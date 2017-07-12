@@ -66,6 +66,7 @@ toolkit:
 inputs:
   - GCLOUD_BUCKET:
     opts:
+      category: Test
       title: "Gcloud bucket"
       summary: Gcloud bucket where test folders will be stored
       description: |
@@ -74,6 +75,7 @@ inputs:
       is_expand: true
   - GCLOUD_OPTIONS:
     opts:
+      category: Test
       title: "Gcloud Options"
       summary: Gcloud firebase options. Specifies tests to run, devices to use, etc.
       description: |
@@ -82,6 +84,7 @@ inputs:
       is_expand: true
   - APP_APK:
     opts:
+      category: Test
       title: "App APK to test"
       summary: App APK to test on Firebase Test Lab
       description: |
@@ -90,6 +93,7 @@ inputs:
       is_expand: true
   - TEST_APK:
     opts:
+      category: Test
       title: "Test APK to test"
       summary: Test APK to run on Firebase Test Lab. Not required for robo tests.
       description: |
@@ -97,7 +101,7 @@ inputs:
       is_expand: true
   - GCLOUD_USER:
     opts:
-      category: Config
+      category: Auth
       title: "Gcloud user"
       summary: Gcloud user. Read from keyfile when omitted.
       description: |
@@ -105,7 +109,7 @@ inputs:
       is_expand: true
   - GCLOUD_PROJECT:
     opts:
-      category: Config
+      category: Auth
       title: "Gcloud project"
       summary: Gcloud project. Read from keyfile when omitted
       description: |
