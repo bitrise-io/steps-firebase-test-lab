@@ -71,13 +71,15 @@ func runCommand(cmd string) {
 }
 
 // Env string names
-const GCLOUD_USER = "GCLOUD_USER"
-const GCLOUD_PROJECT = "GCLOUD_PROJECT"
-const GCLOUD_BUCKET = "GCLOUD_BUCKET"
-const GCLOUD_OPTIONS = "GCLOUD_OPTIONS"
-const APP_APK = "APP_APK"
-const TEST_APK = "TEST_APK"
-const GCLOUD_KEY = "GCLOUD_KEY"
+const GCLOUD_USER = "GCLOUD_USER" // optional. read from keyfile
+const GCLOUD_PROJECT = "GCLOUD_PROJECT" // optional. read from keyfile
+const GCLOUD_BUCKET = "GCLOUD_BUCKET" // required
+const GCLOUD_OPTIONS = "GCLOUD_OPTIONS" // required
+const APP_APK = "APP_APK" // required
+const TEST_APK = "TEST_APK" // optional
+const GCLOUD_KEY = "GCLOUD_KEY" // required
+
+// Output from the step
 const GCS_RESULTS_DIR = "GCS_RESULTS_DIR"
 
 type FirebaseConfig struct {
@@ -160,6 +162,7 @@ func main() {
 	runCommand("gcloud config set project " + config.Project)
 	runCommand("gcloud auth activate-service-account --key-file " + config.KeyPath + " " + config.User)
 
+	// todo: input variable support
 	// https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
 	gcloudOptions, err := shellquote.Split(config.Options)
 	checkError(err)

@@ -29,14 +29,14 @@ host_os_tags:
 # You can find more information about project type tags in the Step Development Guideline:
 # https://github.com/bitrise-io/bitrise/blob/master/_docs/step-development-guideline.md
 #
-# project_type_tags:
+project_type_tags:
 #   - ios
-#   - macos
-#   - android
-#   - xamarin
-#   - react-native
-#   - cordova
-#   - ionic
+   - macos
+   - android
+   - xamarin
+   - react-native
+   - cordova
+   - ionic
 
 # Type tags are used for categorizing steps, for easier step discovery in Step Libraries.
 # You can find more information about type tags in the Step Development Guideline:
@@ -64,24 +64,65 @@ toolkit:
 
 
 inputs:
-  - example_step_input: Default Value - you can leave this empty if you want to
+  - GCLOUD_USER:
     opts:
-      title: "Example Step Input"
-      summary: Summary. No more than 2-3 sentences.
+      title: "Gcloud user"
+      summary: Gcloud user. Read from keyfile when omitted.
       description: |
-        Description of this input.
-
-        Can be Markdown formatted text.
+        https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
+      is_expand: false
+      is_required: false
+      value_options: []
+  - GCLOUD_PROJECT:
+    opts:
+      title: "Gcloud project"
+      summary: Gcloud project. Read from keyfile when omitted
+      description: |
+        https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
+      is_expand: false
+      is_required: false
+      value_options: []
+  - GCLOUD_BUCKET:
+    opts:
+      title: "Gcloud bucket"
+      summary: Gcloud bucket where test folders will be stored
+      description: |
+        https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
       is_expand: true
       is_required: true
       value_options: []
+  - GCLOUD_OPTIONS:
+    opts:
+      title: "Gcloud Options"
+      summary: Gcloud firebase options. Specifies tests to run, devices to use, etc.
+      description: |
+        https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
+      is_expand: true
+      is_required: true
+      value_options: []
+  - APP_APK:
+    opts:
+      title: "App APK to test"
+      summary: App APK to test on Firebase Test Lab
+      description: |
+        https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
+      is_expand: true
+      is_required: true
+      value_options: []
+  - TEST_APK:
+    opts:
+      title: "Test APK to test"
+      summary: Test APK to run on Firebase Test Lab. Not required for robo tests.
+      description: |
+        https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
+      is_expand: true
+      is_required: false
+      value_options: []
 
 outputs:
-  - EXAMPLE_STEP_OUTPUT:
+  - GCS_RESULTS_DIR:
     opts:
-      title: "Example Step Output"
-      summary: Summary. No more than 2-3 sentences.
+      title: "Google Cloud Storage results dir"
+      summary: GCS results dir
       description: |
-        Description of this output.
-
-        Can be Markdown formatted text.
+        GCS dir that contains the test execution results.
