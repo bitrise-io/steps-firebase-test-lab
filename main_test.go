@@ -35,27 +35,33 @@ func panicOnError(err error) {
 }
 
 func TestFileExists(t *testing.T) {
+	assert := assert.New(t)
+
 	err := fileExists("/tmp/nope.txt")
-	assert.EqualError(t, err, "file doesn't exist: '/tmp/nope.txt'")
+	assert.EqualError(err, "file doesn't exist: '/tmp/nope.txt'")
 
 	err = fileExists("/tmp")
-	assert.Equal(t, err, nil)
+	assert.Equal(err, nil)
 }
 
 func TestRunCommand(t *testing.T) {
+	assert := assert.New(t)
+
 	err := runCommand("echo hi")
-	assert.Equal(t, err, nil)
+	assert.Equal(err, nil)
 }
 
 func TestGetRequiredEnv(t *testing.T) {
+	assert := assert.New(t)
+
 	const KEY = "KEY_THAT_IS_NOT_USED"
 	const ENV_VALUE = "ENV_VALUE"
 	_, err := getRequiredEnv(KEY)
-	assert.EqualError(t, err, KEY + " is not defined!")
+	assert.EqualError(err, KEY + " is not defined!")
 
 	os.Setenv(KEY, ENV_VALUE)
 	value, err := getRequiredEnv(KEY)
-	assert.Equal(t, value, ENV_VALUE)
+	assert.Equal(value, ENV_VALUE)
 }
 
 func TestHello(t *testing.T) {
