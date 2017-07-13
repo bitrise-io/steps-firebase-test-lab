@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	. "github.com/bootstraponline/bitrise-step-firebase-test-lab/utils"
 	"errors"
-	_ "fmt"
 )
 
 // os.Exit(1) = test passes.
@@ -31,12 +30,6 @@ func resetEnv() {
 	os.Setenv(PATH, path)
 }
 
-func panicOnError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 func TestFileExists(t *testing.T) {
 	assert := assert.New(t)
 
@@ -50,7 +43,7 @@ func TestFileExists(t *testing.T) {
 func TestRunCommand(t *testing.T) {
 	assert := assert.New(t)
 
-	err := RunCommand("echo hi")
+	err := RunCommand("true")
 	assert.Equal(err, nil)
 }
 
@@ -70,7 +63,7 @@ func TestGetRequiredEnv(t *testing.T) {
 func TestExecuteGcloud(t *testing.T) {
 	assert := assert.New(t)
 	gcloud_key, err := GetRequiredEnv(GCLOUD_KEY)
-	panicOnError(err)
+	assert.NoError(err)
 
 	resetEnv()
 	os.Setenv(GCLOUD_KEY, gcloud_key)
@@ -113,6 +106,13 @@ func TestExecuteGcloud(t *testing.T) {
 		"--app", "/tmp/app.apk",
 		"--results-bucket=golang-bucket",
 		"--results-dir=" + gcs_object,
+		"--device-ids", "NexusLowRes",
+		"--os-version-ids", "25",
+		"--locales", "en",
+		"--orientations", "portrait",
+		"--timeout", "25m",
+		"--directories-to-pull=/sdcard",
+		"--environment-variables", "^:^coverage=true:coverageFile=/sdcard/coverage.ec",
 	})
 }
 

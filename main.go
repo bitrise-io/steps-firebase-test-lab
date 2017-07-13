@@ -137,41 +137,59 @@ func executeGcloud(config *FirebaseConfig, gcs_object string) ([]string, error) 
 	}
 
 	// https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
-	gcloudOptions, err := shellquote.Split(config.Options)
+	userOptionsSlice, err := shellquote.Split(config.Options)
 	if err != nil {
 		return make([]string, 0), err
 	}
-	fmt.Println("user options: ", gcloudOptions)
 
-	// TODO: skip setting by default if these flags were specified by the user
+	userOptionsSet := GcloudOptionsToSet(userOptionsSlice)
+
 	// Set --app, --test, --results-bucket, --results-dir and test type
+	// Use user values for flags if supplied.
 	args := make([]string, 0)
 	args = append(args, "gcloud", "firebase", "test", "android", "run")
+
+	const TEST_FLAG = "--test"
+	const APP_FLAG = "--app"
+	const RESULTS_BUCKET_FLAG = "--results-bucket="
+	const RESULTS_DIR_FLAG = "--results-dir="
 
 	if IsEmpty(config.TestApk) {
 		args = append(args, "robo")
 	} else {
 		args = append(args, "instrumentation")
-		args = append(args, "--test", config.TestApk)
+		if !userOptionsSet[TEST_FLAG] {
+			args = append(args, "--test", config.TestApk)
+		}
 	}
 
-	args = append(args, "--app", config.AppApk)
-	args = append(args, "--results-bucket="+config.ResultsBucket)
-	args = append(args, "--results-dir="+gcs_object)
+	if !userOptionsSet[APP_FLAG] {
+		args = append(args, APP_FLAG, config.AppApk)
+	}
+	if !userOptionsSet[RESULTS_BUCKET_FLAG] {
+		args = append(args, RESULTS_BUCKET_FLAG+config.ResultsBucket)
+	}
+	if !userOptionsSet[RESULTS_DIR_FLAG] {
+		args = append(args, RESULTS_DIR_FLAG+gcs_object)
+	}
 
-	fmt.Println("auto options: ", args)
+	// Don't export results bucket when it's user defined.
+	if !userOptionsSet[RESULTS_BUCKET_FLAG] || !userOptionsSet[RESULTS_DIR_FLAG] {
+		exportGcsDir(config.ResultsBucket, gcs_object)
+	}
 
-	exportGcsDir(config.ResultsBucket, gcs_object)
-
-	return args, nil
+	return append(args, userOptionsSlice...), nil
 }
 
 func main() {
 	config, err := NewFirebaseConfig()
 	FatalError(err)
 
-	// todo: pass string slice to run command
-	_, err = executeGcloud(config, NewGcsObjectName())
+	command, err := executeGcloud(config, NewGcsObjectName())
 	FatalError(err)
+
+	err = RunCommandSlice(command)
+	FatalError(err)
+
 	os.Exit(0)
 }

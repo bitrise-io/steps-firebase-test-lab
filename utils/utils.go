@@ -12,6 +12,18 @@ import (
 
 const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
+func GcloudOptionsToSet(slice []string) map[string]bool {
+	set := make(map[string]bool)
+
+	for i := range slice {
+		// --results-bucket=/a/b/c => --results-bucket=
+		key := strings.SplitAfter(slice[i], "=")[0]
+		set[key] = true
+	}
+
+	return set
+}
+
 // Matches api_lib/firebase/test/arg_validate.py _GenerateUniqueGcsObjectName from gcloud SDK
 // Example output: 2017-07-12_11:36:12.467586_XVlB
 func NewGcsObjectName() string {
@@ -54,6 +66,11 @@ func FileExists(filePath string) error {
 func RunCommand(cmd string) error {
 	cmdSlice := strings.Fields(cmd)
 
+	cmdObj := command.NewWithStandardOuts(cmdSlice[0], cmdSlice[1:]...)
+	return cmdObj.Run()
+}
+
+func RunCommandSlice(cmdSlice []string) error {
 	cmdObj := command.NewWithStandardOuts(cmdSlice[0], cmdSlice[1:]...)
 	return cmdObj.Run()
 }
