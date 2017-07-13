@@ -5,6 +5,8 @@ import (
 	"os"
 	"io/ioutil"
 	"github.com/stretchr/testify/assert"
+	. "github.com/bootstraponline/bitrise-step-firebase-test-lab/utils"
+	"errors"
 )
 
 // os.Exit(1) = test passes.
@@ -37,17 +39,17 @@ func panicOnError(err error) {
 func TestFileExists(t *testing.T) {
 	assert := assert.New(t)
 
-	err := fileExists("/tmp/nope.txt")
+	err := FileExists("/tmp/nope.txt")
 	assert.EqualError(err, "file doesn't exist: '/tmp/nope.txt'")
 
-	err = fileExists("/tmp")
+	err = FileExists("/tmp")
 	assert.Equal(err, nil)
 }
 
 func TestRunCommand(t *testing.T) {
 	assert := assert.New(t)
 
-	err := runCommand("echo hi")
+	err := RunCommand("echo hi")
 	assert.Equal(err, nil)
 }
 
@@ -56,16 +58,17 @@ func TestGetRequiredEnv(t *testing.T) {
 
 	const KEY = "KEY_THAT_IS_NOT_USED"
 	const ENV_VALUE = "ENV_VALUE"
-	_, err := getRequiredEnv(KEY)
-	assert.EqualError(err, KEY + " is not defined!")
+	_, err := GetRequiredEnv(KEY)
+	assert.EqualError(err, KEY+" is not defined!")
 
 	os.Setenv(KEY, ENV_VALUE)
-	value, err := getRequiredEnv(KEY)
+	value, err := GetRequiredEnv(KEY)
 	assert.Equal(value, ENV_VALUE)
 }
 
-func TestHello(t *testing.T) {
-	gcloud_key, err := getRequiredEnv(GCLOUD_KEY)
+func TestExecuteGcloud(t *testing.T) {
+	assert := assert.New(t)
+	gcloud_key, err := GetRequiredEnv(GCLOUD_KEY)
 	panicOnError(err)
 
 	resetEnv()
@@ -83,21 +86,89 @@ func TestHello(t *testing.T) {
 	test_apk_path := "/tmp/app.apk"
 	app_apk_path := "/tmp/test.apk"
 
-	if fileExists(test_apk_path) != nil {
+	if FileExists(test_apk_path) != nil {
 		ioutil.WriteFile(test_apk_path, nil, 0644)
 	}
 
-	if fileExists(app_apk_path) != nil {
+	if FileExists(app_apk_path) != nil {
 		ioutil.WriteFile(app_apk_path, nil, 0644)
 	}
 
 	os.Setenv(APP_APK, test_apk_path)
 	os.Setenv(TEST_APK, app_apk_path)
 
-	err = executeGcloud(true)
-	if err != nil {
-		t.Error(err)
-	}
+	config, err := NewFirebaseConfig()
+	config.Debug = true
+	assert.NoError(err)
+
+	_, err = executeGcloud(config)
+	assert.NoError(err)
 }
 
-// t.Error("")
+func TestNewFirebaseConfig(t *testing.T) {
+	assert := assert.New(t)
+	resetEnv()
+
+	err := errors.New("")
+
+	//- APP_APK missing
+	_, err = NewFirebaseConfig()
+	assert.EqualError(err, "APP_APK is not defined!")
+
+	//- APP_APK pointing to non-existent file
+	os.Setenv(APP_APK, "/tmp/nope")
+	_, err = NewFirebaseConfig()
+	assert.EqualError(err, "file doesn't exist: '/tmp/nope'")
+
+	//- GCLOUD_KEY missing
+	os.Setenv(APP_APK, "/tmp")
+	_, err = NewFirebaseConfig()
+	assert.EqualError(err, "GCLOUD_KEY is not defined!")
+	os.Setenv(GCLOUD_KEY, "1234")
+
+	//- gcloud_user not defined in env or key
+	_, err = NewFirebaseConfig()
+	assert.EqualError(err, "GCLOUD_USER not defined in env or gcloud key")
+	os.Setenv(GCLOUD_USER, "1234")
+
+	//- gcloud_project not defined in env or key
+	_, err = NewFirebaseConfig()
+	assert.EqualError(err, "GCLOUD_PROJECT not defined in env or gcloud key")
+	os.Setenv(GCLOUD_PROJECT, "1234")
+
+	//- GCLOUD_BUCKET missing
+	os.Setenv(GCLOUD_KEY, "1234")
+	_, err = NewFirebaseConfig()
+	assert.EqualError(err, "GCLOUD_BUCKET is not defined!")
+
+	//- GCLOUD_OPTIONS not defined
+	os.Setenv(GCLOUD_BUCKET, "1234")
+	_, err = NewFirebaseConfig()
+	assert.EqualError(err, "GCLOUD_OPTIONS is not defined!")
+
+	//- TEST_APK pointing to non-existent file
+	os.Setenv(GCLOUD_OPTIONS, "1234")
+	os.Setenv(TEST_APK, "/tmp/nope")
+	_, err = NewFirebaseConfig()
+	assert.EqualError(err, "file doesn't exist: '/tmp/nope'")
+	os.Setenv(TEST_APK, "")
+
+	//- HOME missing
+	home := os.Getenv(HOME)
+	os.Setenv(HOME, "")
+	_, err = NewFirebaseConfig()
+	assert.EqualError(err, "HOME is not defined!")
+	os.Setenv(HOME, home)
+
+	//- GCLOUD_KEY invalid base64
+	os.Setenv(GCLOUD_KEY, " ")
+	_, err = NewFirebaseConfig()
+	assert.EqualError(err, "illegal base64 data at input byte 0")
+	os.Setenv(GCLOUD_KEY, "1234")
+
+	//- GCLOUD_KEY invalid path
+	os.Setenv(HOME, "/does/not/exist")
+	_, err = NewFirebaseConfig()
+	assert.EqualError(err, "open /does/not/exist/gcloudkey.json: no such file or directory")
+	os.Setenv(HOME, home)
+}
