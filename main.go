@@ -146,15 +146,16 @@ func executeGcloud(config *FirebaseConfig, gcs_object string) ([]string, error) 
 	args := make([]string, 0)
 	args = append(args, "gcloud", "firebase", "test", "android", "run")
 
+	const TYPE_FLAG = "--type"
 	const TEST_FLAG = "--test"
 	const APP_FLAG = "--app"
 	const RESULTS_BUCKET_FLAG = "--results-bucket="
 	const RESULTS_DIR_FLAG = "--results-dir="
 
 	if IsEmpty(config.TestApk) {
-		args = append(args, "robo")
+		args = append(args, TYPE_FLAG, "robo")
 	} else {
-		args = append(args, "instrumentation")
+		args = append(args, TYPE_FLAG, "instrumentation")
 		if !userOptionsSet[TEST_FLAG] {
 			args = append(args, "--test", config.TestApk)
 		}

@@ -101,7 +101,7 @@ func TestExecuteGcloud(t *testing.T) {
 
 	assert.Equal([]string{
 		"gcloud", "firebase", "test", "android", "run",
-		"instrumentation",
+		"--type", "instrumentation",
 		"--test", "/tmp/test.apk",
 		"--app", "/tmp/app.apk",
 		"--results-bucket=golang-bucket",
@@ -164,7 +164,7 @@ func TestExecuteGcloudUserOverrides(t *testing.T) {
 
 	assert.Equal([]string{
 		"gcloud", "firebase", "test", "android", "run",
-		"instrumentation",
+		"--type", "instrumentation",
 		"--test", "custom_test_apk",
 		"--app", "custom_app_apk",
 		"--results-bucket=custom_results_bucket",
@@ -209,7 +209,7 @@ func TestExecuteGcloudRobo(t *testing.T) {
 
 	assert.Equal([]string{
 		"gcloud", "firebase", "test", "android", "run",
-		"robo",
+		"--type", "robo",
 		"--app", "/tmp/app.apk",
 		"--results-bucket=golang-bucket",
 		"--results-dir=" + gcs_object,
