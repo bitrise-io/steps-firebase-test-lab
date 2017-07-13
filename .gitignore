@@ -2,3 +2,4 @@
 .gows.user.yml
 .envstore.yml
 _tmp/
+coverage.out

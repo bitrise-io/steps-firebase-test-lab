@@ -4,6 +4,7 @@ import (
 	"testing"
 	"os"
 	"io/ioutil"
+	"github.com/stretchr/testify/assert"
 )
 
 // os.Exit(1) = test passes.
@@ -31,6 +32,30 @@ func panicOnError(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func TestFileExists(t *testing.T) {
+	err := fileExists("/tmp/nope.txt")
+	assert.EqualError(t, err, "file doesn't exist: '/tmp/nope.txt'")
+
+	err = fileExists("/tmp")
+	assert.Equal(t, err, nil)
+}
+
+func TestRunCommand(t *testing.T) {
+	err := runCommand("echo hi")
+	assert.Equal(t, err, nil)
+}
+
+func TestGetRequiredEnv(t *testing.T) {
+	const KEY = "KEY_THAT_IS_NOT_USED"
+	const ENV_VALUE = "ENV_VALUE"
+	_, err := getRequiredEnv(KEY)
+	assert.EqualError(t, err, KEY + " is not defined!")
+
+	os.Setenv(KEY, ENV_VALUE)
+	value, err := getRequiredEnv(KEY)
+	assert.Equal(t, value, ENV_VALUE)
 }
 
 func TestHello(t *testing.T) {
@@ -64,7 +89,9 @@ func TestHello(t *testing.T) {
 	os.Setenv(TEST_APK, app_apk_path)
 
 	err = executeGcloud(true)
-	if err != nil { t.Error(err) }
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 // t.Error("")
