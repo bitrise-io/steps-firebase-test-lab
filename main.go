@@ -190,6 +190,7 @@ func main() {
 	command, err := executeGcloud(config, NewGcsObjectName())
 	FatalError(err)
 
+	fmt.Println(command)
 	err = RunCommandSlice(command)
 	FatalError(err)
 
