@@ -102,10 +102,7 @@ func NewFirebaseConfig() (*FirebaseConfig, error) {
 		return empty, err
 	}
 
-	gcloud_options_value, err := GetRequiredEnv(GCLOUD_OPTIONS)
-	if err != nil {
-		return empty, err
-	}
+	gcloud_options_value := GetOptionalEnv(GCLOUD_OPTIONS)
 
 	return &FirebaseConfig{
 		ResultsBucket: gcloud_bucket_value,

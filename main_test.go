@@ -14,7 +14,7 @@ import (
 // GCLOUD_USER    // Optional. Read from keyfile
 // GCLOUD_PROJECT // Optional. Read from keyfile
 // GCLOUD_BUCKET  // Required
-// GCLOUD_OPTIONS // Required
+// GCLOUD_OPTIONS // Optional
 // APP_APK        // Required
 // TEST_APK       // Optional
 // GCLOUD_KEY     // Required
@@ -77,19 +77,19 @@ func TestExecuteGcloud(t *testing.T) {
 	 --directories-to-pull=/sdcard 
 	 --environment-variables ^:^coverage=true:coverageFile=/sdcard/coverage.ec`)
 
-	test_apk_path := "/tmp/app.apk"
-	app_apk_path := "/tmp/test.apk"
-
-	if FileExists(test_apk_path) != nil {
-		ioutil.WriteFile(test_apk_path, nil, 0644)
-	}
+	app_apk_path := "/tmp/app.apk"
+	test_apk_path := "/tmp/test.apk"
 
 	if FileExists(app_apk_path) != nil {
 		ioutil.WriteFile(app_apk_path, nil, 0644)
 	}
 
-	os.Setenv(APP_APK, test_apk_path)
-	os.Setenv(TEST_APK, app_apk_path)
+	if FileExists(test_apk_path) != nil {
+		ioutil.WriteFile(test_apk_path, nil, 0644)
+	}
+
+	os.Setenv(APP_APK, app_apk_path)
+	os.Setenv(TEST_APK, test_apk_path)
 
 	config, err := NewFirebaseConfig()
 	config.Debug = true
@@ -140,19 +140,19 @@ func TestExecuteGcloudUserOverrides(t *testing.T) {
 	 --directories-to-pull=/sdcard
 	 --environment-variables ^:^coverage=true:coverageFile=/sdcard/coverage.ec`)
 
-	test_apk_path := "/tmp/app.apk"
-	app_apk_path := "/tmp/test.apk"
-
-	if FileExists(test_apk_path) != nil {
-		ioutil.WriteFile(test_apk_path, nil, 0644)
-	}
+	app_apk_path := "/tmp/app.apk"
+	test_apk_path := "/tmp/test.apk"
 
 	if FileExists(app_apk_path) != nil {
 		ioutil.WriteFile(app_apk_path, nil, 0644)
 	}
 
-	os.Setenv(APP_APK, test_apk_path)
-	os.Setenv(TEST_APK, app_apk_path)
+	if FileExists(test_apk_path) != nil {
+		ioutil.WriteFile(test_apk_path, nil, 0644)
+	}
+
+	os.Setenv(APP_APK, app_apk_path)
+	os.Setenv(TEST_APK, test_apk_path)
 
 	config, err := NewFirebaseConfig()
 	config.Debug = true
@@ -176,6 +176,43 @@ func TestExecuteGcloudUserOverrides(t *testing.T) {
 		"--timeout", "25m",
 		"--directories-to-pull=/sdcard",
 		"--environment-variables", "^:^coverage=true:coverageFile=/sdcard/coverage.ec",
+	}, result)
+}
+
+func TestExecuteGcloudRobo(t *testing.T) {
+	assert := assert.New(t)
+	gcloud_key, err := GetRequiredEnv(GCLOUD_KEY)
+	assert.NoError(err)
+
+	resetEnv()
+	os.Setenv(GCLOUD_KEY, gcloud_key)
+
+	// when user sets --test, --app, --results-bucket=, and --results-dir= then
+	// we should use thoe values.
+	os.Setenv(GCLOUD_BUCKET, "golang-bucket")
+	os.Setenv(GCLOUD_OPTIONS, "")
+
+	app_apk_path := "/tmp/app.apk"
+	if FileExists(app_apk_path) != nil {
+		ioutil.WriteFile(app_apk_path, nil, 0644)
+	}
+
+	os.Setenv(APP_APK, app_apk_path)
+
+	config, err := NewFirebaseConfig()
+	config.Debug = true
+	assert.NoError(err)
+
+	gcs_object := NewGcsObjectName()
+	result, err := executeGcloud(config, gcs_object)
+	assert.NoError(err)
+
+	assert.Equal([]string{
+		"gcloud", "firebase", "test", "android", "run",
+		"robo",
+		"--app", "/tmp/app.apk",
+		"--results-bucket=golang-bucket",
+		"--results-dir=" + gcs_object,
 	}, result)
 }
 
@@ -214,11 +251,6 @@ func TestNewFirebaseConfig(t *testing.T) {
 	os.Setenv(GCLOUD_KEY, "1234")
 	_, err = NewFirebaseConfig()
 	assert.EqualError(err, "GCLOUD_BUCKET is not defined!")
-
-	//- GCLOUD_OPTIONS not defined
-	os.Setenv(GCLOUD_BUCKET, "1234")
-	_, err = NewFirebaseConfig()
-	assert.EqualError(err, "GCLOUD_OPTIONS is not defined!")
 
 	//- TEST_APK pointing to non-existent file
 	os.Setenv(GCLOUD_OPTIONS, "1234")
