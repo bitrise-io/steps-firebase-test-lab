@@ -178,6 +178,11 @@ func executeGcloud(config *FirebaseConfig, gcs_object string) ([]string, error) 
 		exportGcsDir(config.ResultsBucket, gcs_object)
 	}
 
+	if config.Debug {
+		fmt.Println("auto args: ", args)
+		fmt.Println("user args: ", userOptionsSlice)
+	}
+
 	return append(args, userOptionsSlice...), nil
 }
 

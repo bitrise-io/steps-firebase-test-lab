@@ -37,14 +37,14 @@ func TestFileExists(t *testing.T) {
 	assert.EqualError(err, "file doesn't exist: '/tmp/nope.txt'")
 
 	err = FileExists("/tmp")
-	assert.Equal(err, nil)
+	assert.Equal(nil, err)
 }
 
 func TestRunCommand(t *testing.T) {
 	assert := assert.New(t)
 
 	err := RunCommand("true")
-	assert.Equal(err, nil)
+	assert.Equal(nil, err)
 }
 
 func TestGetRequiredEnv(t *testing.T) {
@@ -57,7 +57,7 @@ func TestGetRequiredEnv(t *testing.T) {
 
 	os.Setenv(KEY, ENV_VALUE)
 	value, err := GetRequiredEnv(KEY)
-	assert.Equal(value, ENV_VALUE)
+	assert.Equal(ENV_VALUE, value)
 }
 
 func TestExecuteGcloud(t *testing.T) {
@@ -99,7 +99,7 @@ func TestExecuteGcloud(t *testing.T) {
 	result, err := executeGcloud(config, gcs_object)
 	assert.NoError(err)
 
-	assert.Equal(result, []string{
+	assert.Equal([]string{
 		"gcloud", "firebase", "test", "android", "run",
 		"instrumentation",
 		"--test", "/tmp/test.apk",
@@ -113,7 +113,70 @@ func TestExecuteGcloud(t *testing.T) {
 		"--timeout", "25m",
 		"--directories-to-pull=/sdcard",
 		"--environment-variables", "^:^coverage=true:coverageFile=/sdcard/coverage.ec",
-	})
+	}, result)
+}
+
+func TestExecuteGcloudUserOverrides(t *testing.T) {
+	assert := assert.New(t)
+	gcloud_key, err := GetRequiredEnv(GCLOUD_KEY)
+	assert.NoError(err)
+
+	resetEnv()
+	os.Setenv(GCLOUD_KEY, gcloud_key)
+
+	// when user sets --test, --app, --results-bucket=, and --results-dir= then
+	// we should use thoe values.
+	os.Setenv(GCLOUD_BUCKET, "golang-bucket")
+	os.Setenv(GCLOUD_OPTIONS, `
+	 --test custom_test_apk
+	 --app custom_app_apk
+	 --results-bucket=custom_results_bucket
+	 --results-dir=custom_results_dir
+	 --device-ids NexusLowRes
+	 --os-version-ids 25
+	 --locales en
+	 --orientations portrait
+	 --timeout 25m
+	 --directories-to-pull=/sdcard
+	 --environment-variables ^:^coverage=true:coverageFile=/sdcard/coverage.ec`)
+
+	test_apk_path := "/tmp/app.apk"
+	app_apk_path := "/tmp/test.apk"
+
+	if FileExists(test_apk_path) != nil {
+		ioutil.WriteFile(test_apk_path, nil, 0644)
+	}
+
+	if FileExists(app_apk_path) != nil {
+		ioutil.WriteFile(app_apk_path, nil, 0644)
+	}
+
+	os.Setenv(APP_APK, test_apk_path)
+	os.Setenv(TEST_APK, app_apk_path)
+
+	config, err := NewFirebaseConfig()
+	config.Debug = true
+	assert.NoError(err)
+
+	gcs_object := NewGcsObjectName()
+	result, err := executeGcloud(config, gcs_object)
+	assert.NoError(err)
+
+	assert.Equal([]string{
+		"gcloud", "firebase", "test", "android", "run",
+		"instrumentation",
+		"--test", "custom_test_apk",
+		"--app", "custom_app_apk",
+		"--results-bucket=custom_results_bucket",
+		"--results-dir=custom_results_dir",
+		"--device-ids", "NexusLowRes",
+		"--os-version-ids", "25",
+		"--locales", "en",
+		"--orientations", "portrait",
+		"--timeout", "25m",
+		"--directories-to-pull=/sdcard",
+		"--environment-variables", "^:^coverage=true:coverageFile=/sdcard/coverage.ec",
+	}, result)
 }
 
 func TestNewFirebaseConfig(t *testing.T) {
