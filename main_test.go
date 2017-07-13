@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	. "github.com/bootstraponline/bitrise-step-firebase-test-lab/utils"
 	"errors"
+	_ "fmt"
 )
 
 // os.Exit(1) = test passes.
@@ -101,8 +102,18 @@ func TestExecuteGcloud(t *testing.T) {
 	config.Debug = true
 	assert.NoError(err)
 
-	_, err = executeGcloud(config)
+	gcs_object := NewGcsObjectName()
+	result, err := executeGcloud(config, gcs_object)
 	assert.NoError(err)
+
+	assert.Equal(result, []string{
+		"gcloud", "firebase", "test", "android", "run",
+		"instrumentation",
+		"--test", "/tmp/test.apk",
+		"--app", "/tmp/app.apk",
+		"--results-bucket=golang-bucket",
+		"--results-dir=" + gcs_object,
+	})
 }
 
 func TestNewFirebaseConfig(t *testing.T) {

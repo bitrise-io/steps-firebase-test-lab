@@ -130,7 +130,7 @@ func exportGcsDir(bucket string, object string) error {
 	return nil
 }
 
-func executeGcloud(config *FirebaseConfig) ([]string, error) {
+func executeGcloud(config *FirebaseConfig, gcs_object string) ([]string, error) {
 	if !config.Debug {
 		RunCommand("gcloud config set project " + config.Project)
 		RunCommand("gcloud auth activate-service-account --key-file " + config.KeyPath + " " + config.User)
@@ -146,6 +146,7 @@ func executeGcloud(config *FirebaseConfig) ([]string, error) {
 	// TODO: skip setting by default if these flags were specified by the user
 	// Set --app, --test, --results-bucket, --results-dir and test type
 	args := make([]string, 0)
+	args = append(args, "gcloud", "firebase", "test", "android", "run")
 
 	if IsEmpty(config.TestApk) {
 		args = append(args, "robo")
@@ -156,7 +157,6 @@ func executeGcloud(config *FirebaseConfig) ([]string, error) {
 
 	args = append(args, "--app", config.AppApk)
 	args = append(args, "--results-bucket="+config.ResultsBucket)
-	gcs_object := NewGcsObjectName()
 	args = append(args, "--results-dir="+gcs_object)
 
 	fmt.Println("auto options: ", args)
@@ -171,7 +171,7 @@ func main() {
 	FatalError(err)
 
 	// todo: pass string slice to run command
-	_, err = executeGcloud(config)
+	_, err = executeGcloud(config, NewGcsObjectName())
 	FatalError(err)
 	os.Exit(0)
 }
