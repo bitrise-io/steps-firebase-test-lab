@@ -6,8 +6,9 @@ import (
 	"github.com/bitrise-io/go-utils/command"
 	"strings"
 	"time"
-	"math/rand"
+	"crypto/rand"
 	"fmt"
+	"math/big"
 )
 
 const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -30,11 +31,23 @@ func NewGcsObjectName() string {
 	letterCount := 4
 	bytes := make([]byte, letterCount)
 
+
+
 	for i := 0; i < letterCount; i++ {
-		bytes[i] = letters[rand.Intn(len(letters))]
+		bytes[i] = letters[RandomInt(len(letters))]
 	}
 
 	return time.Now().Format("2006-01-02_3:04:05.999999") + "_" + string(bytes)
+}
+
+// returns from 0 to max-1 [0, max)
+func RandomInt(max int) int {
+	value, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+	if err != nil {
+		panic(err)
+	}
+
+	return int(value.Int64())
 }
 
 func GetOptionalEnv(env string) string {
