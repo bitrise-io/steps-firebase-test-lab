@@ -10,7 +10,7 @@ import (
 	"github.com/kballard/go-shellquote"
 	"os/exec"
 	"errors"
-	. "github.com/bootstraponline/bitrise-step-firebase-test-lab/utils"
+	. "github.com/bootstraponline/steps-firebase-test-lab/utils"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/command"
 )
