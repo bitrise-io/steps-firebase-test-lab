@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	. "github.com/bitrise-community/steps-firebase-test-lab/utils"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
