@@ -13,9 +13,9 @@ summary: |
   Run Android tests on Firebase Test Lab
 description: |
   Firebase Test Lab for Android allows testing Android apps in the cloud
-website: https://github.com/bootstraponline/steps-firebase-test-lab
-source_code_url: https://github.com/bootstraponline/steps-firebase-test-lab
-support_url: https://github.com/bootstraponline/steps-firebase-test-lab/issues
+website: https://github.com/bitrise-community/steps-firebase-test-lab
+source_code_url: https://github.com/bitrise-community/steps-firebase-test-lab
+support_url: https://github.com/bitrise-community/steps-firebase-test-lab/issues
 host_os_tags:
   - osx-10.10
   - ubuntu-16.04
@@ -58,7 +58,7 @@ deps:
 
 toolkit:
   go:
-    package_name: bootstraponline/steps-firebase-test-lab
+    package_name: bitrise-community/steps-firebase-test-lab
 
 
 inputs:

@@ -5,7 +5,7 @@ import (
 	"os"
 	"io/ioutil"
 	"github.com/stretchr/testify/assert"
-	. "github.com/bootstraponline/steps-firebase-test-lab/utils"
+	. "github.com/bitrise-community/steps-firebase-test-lab/utils"
 	"errors"
 )
 
@@ -70,11 +70,11 @@ func TestExecuteGcloud(t *testing.T) {
 
 	os.Setenv(GCLOUD_BUCKET, "golang-bucket")
 	os.Setenv(GCLOUD_OPTIONS, `--device-ids NexusLowRes
-	 --os-version-ids 25 
-	 --locales en 
-	 --orientations portrait 
-	 --timeout 25m 
-	 --directories-to-pull=/sdcard 
+	 --os-version-ids 25
+	 --locales en
+	 --orientations portrait
+	 --timeout 25m
+	 --directories-to-pull=/sdcard
 	 --environment-variables ^:^coverage=true:coverageFile=/sdcard/coverage.ec`)
 
 	app_apk_path := "/tmp/app.apk"
