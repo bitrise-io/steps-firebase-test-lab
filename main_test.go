@@ -21,6 +21,11 @@ import (
 
 const PATH = "PATH"
 
+// envman complains if the .envstore doesn't exist however we don't want to check it into git
+func init() {
+	WriteFile(".envstore.yml")
+}
+
 func resetEnv() {
 	home := os.Getenv(HOME)
 	path := os.Getenv(PATH)
@@ -80,15 +85,8 @@ func TestExecuteGcloud(t *testing.T) {
 	app_apk_path := "/tmp/app.apk"
 	test_apk_path := "/tmp/test.apk"
 
-	if FileExists(app_apk_path) != nil {
-		err = ioutil.WriteFile(app_apk_path, nil, 0644)
-		PanicOnErr(err)
-	}
-
-	if FileExists(test_apk_path) != nil {
-		err = ioutil.WriteFile(test_apk_path, nil, 0644)
-		PanicOnErr(err)
-	}
+	WriteFile(app_apk_path)
+	WriteFile(test_apk_path)
 
 	Setenv(APP_APK, app_apk_path)
 	Setenv(TEST_APK, test_apk_path)
@@ -118,6 +116,13 @@ func TestExecuteGcloud(t *testing.T) {
 	}, result)
 }
 
+func WriteFile(filePath string) {
+	if FileExists(filePath) != nil {
+		err := ioutil.WriteFile(filePath, nil, 0644)
+		PanicOnErr(err)
+	}
+}
+
 func TestExecuteGcloudUserOverrides(t *testing.T) {
 	assert := assert.New(t)
 	gcloud_key, err := GetRequiredEnv(GCLOUD_KEY)
@@ -127,7 +132,7 @@ func TestExecuteGcloudUserOverrides(t *testing.T) {
 	Setenv(GCLOUD_KEY, gcloud_key)
 
 	// when user sets --test, --app, --results-bucket=, and --results-dir= then
-	// we should use thoe values.
+	// we should use those values.
 	Setenv(GCLOUD_BUCKET, "golang-bucket")
 	Setenv(GCLOUD_OPTIONS, `
 	 --test custom_test_apk
@@ -145,15 +150,8 @@ func TestExecuteGcloudUserOverrides(t *testing.T) {
 	app_apk_path := "/tmp/app.apk"
 	test_apk_path := "/tmp/test.apk"
 
-	if FileExists(app_apk_path) != nil {
-		err = ioutil.WriteFile(app_apk_path, nil, 0644)
-		PanicOnErr(err)
-	}
-
-	if FileExists(test_apk_path) != nil {
-		err = ioutil.WriteFile(test_apk_path, nil, 0644)
-		PanicOnErr(err)
-	}
+	WriteFile(app_apk_path)
+	WriteFile(test_apk_path)
 
 	Setenv(APP_APK, app_apk_path)
 	Setenv(TEST_APK, test_apk_path)
@@ -197,10 +195,7 @@ func TestExecuteGcloudRobo(t *testing.T) {
 	Setenv(GCLOUD_OPTIONS, "")
 
 	app_apk_path := "/tmp/app.apk"
-	if FileExists(app_apk_path) != nil {
-		err := ioutil.WriteFile(app_apk_path, nil, 0644)
-		PanicOnErr(err)
-	}
+	WriteFile(app_apk_path)
 
 	Setenv(APP_APK, app_apk_path)
 
@@ -252,7 +247,7 @@ func TestNewFirebaseConfig(t *testing.T) {
 	Setenv(APP_APK, "/tmp")
 	_, err = NewFirebaseConfig()
 	assert.EqualError(err, "GCLOUD_KEY is not defined!")
-	Setenv(GCLOUD_KEY, "1234")
+	Setenv(GCLOUD_KEY, "e30K") // {} base64 encoded
 
 	//- gcloud_user not defined in env or key
 	_, err = NewFirebaseConfig()
