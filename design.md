@@ -18,6 +18,4 @@ TEST_APK       | test apk containing tests to execute
 
 ## To Do
 
-- [ ] Run instrumentation tests given app/test apk
-- [ ] Run Robo tests given only app apk
-- [ ] Download coverage.ec
+- Run `errcheck -asserts=true -blank=true .` automatically

@@ -26,8 +26,8 @@ func resetEnv() {
 	path := os.Getenv(PATH)
 
 	os.Clearenv()
-	os.Setenv(HOME, home)
-	os.Setenv(PATH, path)
+	Setenv(HOME, home)
+	Setenv(PATH, path)
 }
 
 func TestFileExists(t *testing.T) {
@@ -55,7 +55,7 @@ func TestGetRequiredEnv(t *testing.T) {
 	_, err := GetRequiredEnv(KEY)
 	assert.EqualError(err, KEY+" is not defined!")
 
-	os.Setenv(KEY, ENV_VALUE)
+	Setenv(KEY, ENV_VALUE)
 	value, err := GetRequiredEnv(KEY)
 	assert.Equal(ENV_VALUE, value)
 }
@@ -66,10 +66,10 @@ func TestExecuteGcloud(t *testing.T) {
 	assert.NoError(err)
 
 	resetEnv()
-	os.Setenv(GCLOUD_KEY, gcloud_key)
+	Setenv(GCLOUD_KEY, gcloud_key)
 
-	os.Setenv(GCLOUD_BUCKET, "golang-bucket")
-	os.Setenv(GCLOUD_OPTIONS, `--device-ids NexusLowRes
+	Setenv(GCLOUD_BUCKET, "golang-bucket")
+	Setenv(GCLOUD_OPTIONS, `--device-ids NexusLowRes
 	 --os-version-ids 25
 	 --locales en
 	 --orientations portrait
@@ -81,15 +81,17 @@ func TestExecuteGcloud(t *testing.T) {
 	test_apk_path := "/tmp/test.apk"
 
 	if FileExists(app_apk_path) != nil {
-		ioutil.WriteFile(app_apk_path, nil, 0644)
+		err = ioutil.WriteFile(app_apk_path, nil, 0644)
+		PanicOnErr(err)
 	}
 
 	if FileExists(test_apk_path) != nil {
-		ioutil.WriteFile(test_apk_path, nil, 0644)
+		err = ioutil.WriteFile(test_apk_path, nil, 0644)
+		PanicOnErr(err)
 	}
 
-	os.Setenv(APP_APK, app_apk_path)
-	os.Setenv(TEST_APK, test_apk_path)
+	Setenv(APP_APK, app_apk_path)
+	Setenv(TEST_APK, test_apk_path)
 
 	config, err := NewFirebaseConfig()
 	config.Debug = true
@@ -122,12 +124,12 @@ func TestExecuteGcloudUserOverrides(t *testing.T) {
 	assert.NoError(err)
 
 	resetEnv()
-	os.Setenv(GCLOUD_KEY, gcloud_key)
+	Setenv(GCLOUD_KEY, gcloud_key)
 
 	// when user sets --test, --app, --results-bucket=, and --results-dir= then
 	// we should use thoe values.
-	os.Setenv(GCLOUD_BUCKET, "golang-bucket")
-	os.Setenv(GCLOUD_OPTIONS, `
+	Setenv(GCLOUD_BUCKET, "golang-bucket")
+	Setenv(GCLOUD_OPTIONS, `
 	 --test custom_test_apk
 	 --app custom_app_apk
 	 --results-bucket=custom_results_bucket
@@ -144,15 +146,17 @@ func TestExecuteGcloudUserOverrides(t *testing.T) {
 	test_apk_path := "/tmp/test.apk"
 
 	if FileExists(app_apk_path) != nil {
-		ioutil.WriteFile(app_apk_path, nil, 0644)
+		err = ioutil.WriteFile(app_apk_path, nil, 0644)
+		PanicOnErr(err)
 	}
 
 	if FileExists(test_apk_path) != nil {
-		ioutil.WriteFile(test_apk_path, nil, 0644)
+		err = ioutil.WriteFile(test_apk_path, nil, 0644)
+		PanicOnErr(err)
 	}
 
-	os.Setenv(APP_APK, app_apk_path)
-	os.Setenv(TEST_APK, test_apk_path)
+	Setenv(APP_APK, app_apk_path)
+	Setenv(TEST_APK, test_apk_path)
 
 	config, err := NewFirebaseConfig()
 	config.Debug = true
@@ -185,19 +189,20 @@ func TestExecuteGcloudRobo(t *testing.T) {
 	assert.NoError(err)
 
 	resetEnv()
-	os.Setenv(GCLOUD_KEY, gcloud_key)
+	Setenv(GCLOUD_KEY, gcloud_key)
 
 	// when user sets --test, --app, --results-bucket=, and --results-dir= then
 	// we should use thoe values.
-	os.Setenv(GCLOUD_BUCKET, "golang-bucket")
-	os.Setenv(GCLOUD_OPTIONS, "")
+	Setenv(GCLOUD_BUCKET, "golang-bucket")
+	Setenv(GCLOUD_OPTIONS, "")
 
 	app_apk_path := "/tmp/app.apk"
 	if FileExists(app_apk_path) != nil {
-		ioutil.WriteFile(app_apk_path, nil, 0644)
+		err := ioutil.WriteFile(app_apk_path, nil, 0644)
+		PanicOnErr(err)
 	}
 
-	os.Setenv(APP_APK, app_apk_path)
+	Setenv(APP_APK, app_apk_path)
 
 	config, err := NewFirebaseConfig()
 	config.Debug = true
@@ -216,6 +221,18 @@ func TestExecuteGcloudRobo(t *testing.T) {
 	}, result)
 }
 
+func PanicOnErr(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+// handle err to pass checkerr check
+func Setenv(key, value string) {
+	err := os.Setenv(key, value)
+	PanicOnErr(err)
+}
+
 func TestNewFirebaseConfig(t *testing.T) {
 	assert := assert.New(t)
 	resetEnv()
@@ -227,54 +244,54 @@ func TestNewFirebaseConfig(t *testing.T) {
 	assert.EqualError(err, "APP_APK is not defined!")
 
 	//- APP_APK pointing to non-existent file
-	os.Setenv(APP_APK, "/tmp/nope")
+	Setenv(APP_APK, "/tmp/nope")
 	_, err = NewFirebaseConfig()
 	assert.EqualError(err, "file doesn't exist: '/tmp/nope'")
 
 	//- GCLOUD_KEY missing
-	os.Setenv(APP_APK, "/tmp")
+	Setenv(APP_APK, "/tmp")
 	_, err = NewFirebaseConfig()
 	assert.EqualError(err, "GCLOUD_KEY is not defined!")
-	os.Setenv(GCLOUD_KEY, "1234")
+	Setenv(GCLOUD_KEY, "1234")
 
 	//- gcloud_user not defined in env or key
 	_, err = NewFirebaseConfig()
 	assert.EqualError(err, "GCLOUD_USER not defined in env or gcloud key")
-	os.Setenv(GCLOUD_USER, "1234")
+	Setenv(GCLOUD_USER, "1234")
 
 	//- gcloud_project not defined in env or key
 	_, err = NewFirebaseConfig()
 	assert.EqualError(err, "GCLOUD_PROJECT not defined in env or gcloud key")
-	os.Setenv(GCLOUD_PROJECT, "1234")
+	Setenv(GCLOUD_PROJECT, "1234")
 
 	//- GCLOUD_BUCKET missing
-	os.Setenv(GCLOUD_KEY, "1234")
+	Setenv(GCLOUD_KEY, "1234")
 	_, err = NewFirebaseConfig()
 	assert.EqualError(err, "GCLOUD_BUCKET is not defined!")
 
 	//- TEST_APK pointing to non-existent file
-	os.Setenv(GCLOUD_OPTIONS, "1234")
-	os.Setenv(TEST_APK, "/tmp/nope")
+	Setenv(GCLOUD_OPTIONS, "1234")
+	Setenv(TEST_APK, "/tmp/nope")
 	_, err = NewFirebaseConfig()
 	assert.EqualError(err, "file doesn't exist: '/tmp/nope'")
-	os.Setenv(TEST_APK, "")
+	Setenv(TEST_APK, "")
 
 	//- HOME missing
 	home := os.Getenv(HOME)
-	os.Setenv(HOME, "")
+	Setenv(HOME, "")
 	_, err = NewFirebaseConfig()
 	assert.EqualError(err, "HOME is not defined!")
-	os.Setenv(HOME, home)
+	Setenv(HOME, home)
 
 	//- GCLOUD_KEY invalid base64
-	os.Setenv(GCLOUD_KEY, " ")
+	Setenv(GCLOUD_KEY, " ")
 	_, err = NewFirebaseConfig()
 	assert.EqualError(err, "illegal base64 data at input byte 0")
-	os.Setenv(GCLOUD_KEY, "1234")
+	Setenv(GCLOUD_KEY, "1234")
 
 	//- GCLOUD_KEY invalid path
-	os.Setenv(HOME, "/does/not/exist")
+	Setenv(HOME, "/does/not/exist")
 	_, err = NewFirebaseConfig()
 	assert.EqualError(err, "open /does/not/exist/gcloudkey.json: no such file or directory")
-	os.Setenv(HOME, home)
+	Setenv(HOME, home)
 }

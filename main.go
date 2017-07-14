@@ -70,7 +70,10 @@ func NewFirebaseConfig() (*FirebaseConfig, error) {
 
 	if empty_gcloud_user || empty_gcloud_project {
 		parsedKeyFile := GcloudKeyFile{}
-		json.Unmarshal([]byte(gcloud_key), &parsedKeyFile)
+		err = json.Unmarshal([]byte(gcloud_key), &parsedKeyFile)
+		if err != nil {
+			return empty, err
+		}
 
 		if empty_gcloud_user {
 			gcloud_user = parsedKeyFile.ClientEmail
@@ -130,15 +133,23 @@ func exportGcsDir(bucket string, object string) error {
 }
 
 func buildGcloudCommand(config *FirebaseConfig, gcs_object string) ([]string, error) {
+	empty := make([]string, 0)
 	if !config.Debug {
-		RunCommand("gcloud config set project " + config.Project)
-		RunCommand("gcloud auth activate-service-account --key-file " + config.KeyPath + " " + config.User)
+		err := RunCommand("gcloud config set project " + config.Project)
+		if err != nil {
+			return empty, err
+		}
+
+		err = RunCommand("gcloud auth activate-service-account --key-file " + config.KeyPath + " " + config.User)
+		if err != nil {
+			return empty, err
+		}
 	}
 
 	// https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
 	userOptionsSlice, err := shellquote.Split(config.Options)
 	if err != nil {
-		return make([]string, 0), err
+		return empty, err
 	}
 
 	userOptionsSet := GcloudOptionsToSet(userOptionsSlice)
@@ -175,7 +186,10 @@ func buildGcloudCommand(config *FirebaseConfig, gcs_object string) ([]string, er
 
 	// Don't export results bucket when it's user defined.
 	if !userOptionsSet[RESULTS_BUCKET_FLAG] || !userOptionsSet[RESULTS_DIR_FLAG] {
-		exportGcsDir(config.ResultsBucket, gcs_object)
+		err = exportGcsDir(config.ResultsBucket, gcs_object)
+		if err != nil {
+			return empty, err
+		}
 	}
 
 	if config.Debug {
