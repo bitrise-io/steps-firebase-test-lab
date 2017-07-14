@@ -1,12 +1,12 @@
 package main
 
 import (
-	"testing"
-	"os"
-	"io/ioutil"
-	"github.com/stretchr/testify/assert"
-	. "github.com/bitrise-community/steps-firebase-test-lab/utils"
 	"errors"
+	. "github.com/bitrise-community/steps-firebase-test-lab/utils"
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
+	"os"
+	"testing"
 )
 
 // os.Exit(1) = test passes.

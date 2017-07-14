@@ -1,18 +1,18 @@
 package main
 
 import (
-	"fmt"
-	"os"
 	"encoding/base64"
-	"io/ioutil"
 	"encoding/json"
-	"path"
-	"github.com/kballard/go-shellquote"
-	"os/exec"
 	"errors"
+	"fmt"
 	. "github.com/bitrise-community/steps-firebase-test-lab/utils"
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/command"
+	"github.com/bitrise-io/go-utils/log"
+	"github.com/kballard/go-shellquote"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"path"
 )
 
 type GcloudKeyFile struct {
