@@ -11,6 +11,8 @@ import (
 	"os/exec"
 	"errors"
 	. "github.com/bootstraponline/bitrise-step-firebase-test-lab/utils"
+	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-io/go-utils/command"
 )
 
 type GcloudKeyFile struct {
@@ -188,11 +190,13 @@ func main() {
 	config, err := NewFirebaseConfig()
 	FatalError(err)
 
-	command, err := executeGcloud(config, NewGcsObjectName())
+	gcsCommand, err := executeGcloud(config, NewGcsObjectName())
 	FatalError(err)
 
-	fmt.Println(command)
-	err = RunCommandSlice(command)
+	log.Printf(command.PrintableCommandArgs(false, gcsCommand))
+	fmt.Println()
+
+	err = RunCommandSlice(gcsCommand)
 	FatalError(err)
 
 	os.Exit(0)
