@@ -30,8 +30,6 @@ host_os_tags:
 # https://github.com/bitrise-io/bitrise/blob/master/_docs/step-development-guideline.md
 #
 project_type_tags:
-#   - ios
-   - macos
    - android
    - xamarin
    - react-native
