@@ -5,7 +5,7 @@ import (
 	"os"
 	"io/ioutil"
 	"github.com/stretchr/testify/assert"
-	. "github.com/bootstraponline/bitrise-step-firebase-test-lab/utils"
+	. "github.com/bootstraponline/steps-firebase-test-lab/utils"
 	"errors"
 )
 
