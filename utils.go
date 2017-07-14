@@ -1,14 +1,14 @@
 package main
 
 import (
-	"os"
+	"crypto/rand"
 	"errors"
+	"fmt"
 	"github.com/bitrise-io/go-utils/command"
+	"math/big"
+	"os"
 	"strings"
 	"time"
-	"crypto/rand"
-	"fmt"
-	"math/big"
 )
 
 const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -30,8 +30,6 @@ func GcloudOptionsToSet(slice []string) map[string]bool {
 func NewGcsObjectName() string {
 	letterCount := 4
 	bytes := make([]byte, letterCount)
-
-
 
 	for i := 0; i < letterCount; i++ {
 		bytes[i] = letters[RandomInt(len(letters))]
@@ -75,7 +73,6 @@ func FileExists(filePath string) error {
 	return nil
 }
 
-
 func RunCommand(cmd string) error {
 	cmdSlice := strings.Fields(cmd)
 
@@ -83,9 +80,9 @@ func RunCommand(cmd string) error {
 	return cmdObj.Run()
 }
 
-func RunCommandSlice(cmdSlice []string) error {
+func RunCommandSlice(cmdSlice []string) (int, error) {
 	cmdObj := command.NewWithStandardOuts(cmdSlice[0], cmdSlice[1:]...)
-	return cmdObj.Run()
+	return cmdObj.RunAndReturnExitCode()
 }
 
 // Env string names

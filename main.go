@@ -209,8 +209,17 @@ func main() {
 	log.Printf(command.PrintableCommandArgs(false, gcsCommand))
 	fmt.Println()
 
-	err = RunCommandSlice(gcsCommand)
-	FatalError(err)
+	const INFRASTRUCTURE_FAILURE = 20
+
+	// Note that gcloud CLI has a transparent retry of 3. Retrying 3x here means we try 9 times in total.
+	for i := 1; i <= 3; i++ {
+		exit_code, err := RunCommandSlice(gcsCommand)
+		FatalError(err)
+
+		if exit_code != INFRASTRUCTURE_FAILURE {
+			break
+		}
+	}
 
 	os.Exit(0)
 }
