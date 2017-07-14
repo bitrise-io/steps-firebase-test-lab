@@ -129,7 +129,7 @@ func exportGcsDir(bucket string, object string) error {
 	return nil
 }
 
-func executeGcloud(config *FirebaseConfig, gcs_object string) ([]string, error) {
+func buildGcloudCommand(config *FirebaseConfig, gcs_object string) ([]string, error) {
 	if !config.Debug {
 		RunCommand("gcloud config set project " + config.Project)
 		RunCommand("gcloud auth activate-service-account --key-file " + config.KeyPath + " " + config.User)
@@ -190,7 +190,7 @@ func main() {
 	config, err := NewFirebaseConfig()
 	FatalError(err)
 
-	gcsCommand, err := executeGcloud(config, NewGcsObjectName())
+	gcsCommand, err := buildGcloudCommand(config, NewGcsObjectName())
 	FatalError(err)
 
 	log.Printf(command.PrintableCommandArgs(false, gcsCommand))

@@ -96,7 +96,7 @@ func TestExecuteGcloud(t *testing.T) {
 	assert.NoError(err)
 
 	gcs_object := NewGcsObjectName()
-	result, err := executeGcloud(config, gcs_object)
+	result, err := buildGcloudCommand(config, gcs_object)
 	assert.NoError(err)
 
 	assert.Equal([]string{
@@ -159,7 +159,7 @@ func TestExecuteGcloudUserOverrides(t *testing.T) {
 	assert.NoError(err)
 
 	gcs_object := NewGcsObjectName()
-	result, err := executeGcloud(config, gcs_object)
+	result, err := buildGcloudCommand(config, gcs_object)
 	assert.NoError(err)
 
 	assert.Equal([]string{
@@ -204,7 +204,7 @@ func TestExecuteGcloudRobo(t *testing.T) {
 	assert.NoError(err)
 
 	gcs_object := NewGcsObjectName()
-	result, err := executeGcloud(config, gcs_object)
+	result, err := buildGcloudCommand(config, gcs_object)
 	assert.NoError(err)
 
 	assert.Equal([]string{
