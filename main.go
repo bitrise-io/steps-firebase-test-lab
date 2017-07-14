@@ -210,9 +210,11 @@ func main() {
 	fmt.Println()
 
 	const INFRASTRUCTURE_FAILURE = 20
+	const TRY_COUNT = 3
 
-	// Note that gcloud CLI has a transparent retry of 3. Retrying 3x here means we try 9 times in total.
-	for i := 1; i <= 3; i++ {
+	// Note that gcloud CLI has a transparent retry of 3.
+	// Retrying 3x here means we try up to 9 times in total.
+	for i := 1; i <= TRY_COUNT; i++ {
 		exit_code, err := RunCommandSlice(gcsCommand)
 		FatalError(err)
 
