@@ -3,6 +3,7 @@
 Firebase Test Lab for Android allows testing Android apps in the cloud
 
 
+
 ## How to use this Step
 
 Can be run directly with the [bitrise CLI](https://github.com/bitrise-io/bitrise),
