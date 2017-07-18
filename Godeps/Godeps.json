@@ -1,7 +1,10 @@
 {
-	"ImportPath": "github.com/bootstraponline/bitrise-step-firebase-test-lab",
+	"ImportPath": "github.com/bitrise-community/steps-firebase-test-lab",
 	"GoVersion": "go1.8",
 	"GodepVersion": "v79",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/colorstring",
@@ -39,8 +42,8 @@
 		},
 		{
 			"ImportPath": "github.com/stretchr/testify/assert",
-			"Comment": "v1.1.4-66-gf6abca5",
-			"Rev": "f6abca593680b2315d2075e0f5e2a9751e3f431a"
+			"Comment": "v1.1.4-70-g05e8a0e",
+			"Rev": "05e8a0eda380579888eb53c394909df027f06991"
 		}
 	]
 }
