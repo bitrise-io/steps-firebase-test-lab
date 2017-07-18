@@ -87,14 +87,14 @@ func runCommandSlice(cmdSlice []string) (int, error) {
 
 // Env string names
 
-const gcloudUser = "GCLOUD_USER"       // optional. read from keyfile
-const gcloudProject = "GCLOUD_PROJECT" // optional. read from keyfile
-const gcloudBucket = "GCLOUD_BUCKET"   // required
-const gcloudOptions = "GCLOUD_OPTIONS" // required
-const appApk = "APP_APK"               // required
-const testApk = "TEST_APK"             // optional
-const gcloudKey = "GCLOUD_KEY"         // required
-const home = "HOME"
+const envKeyGcloudUser = "GCLOUD_USER"       // optional. read from keyfile
+const envKeyGcloudProject = "GCLOUD_PROJECT" // optional. read from keyfile
+const envKeyGcloudBucket = "GCLOUD_BUCKET"   // required
+const envKeyGcloudOptions = "GCLOUD_OPTIONS" // required
+const envKeyAppApk = "APP_APK"               // required
+const envKeyTestApk = "TEST_APK"             // optional
+const envKeyGcloud = "GCLOUD_KEY"            // required
+const envKeyHome = "HOME"
 
 func fatalError(err error) {
 	if err != nil {
