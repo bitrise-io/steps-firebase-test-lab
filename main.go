@@ -14,12 +14,12 @@ import (
 	"path"
 )
 
-type GcloudKeyFile struct {
+type gcloudKeyFile struct {
 	ProjectID   string `json:"project_id"`
 	ClientEmail string `json:"client_email"`
 }
 
-type FirebaseConfig struct {
+type firebaseConfig struct {
 	ResultsBucket string
 	Options       string
 	User          string
@@ -30,116 +30,116 @@ type FirebaseConfig struct {
 	Debug         bool
 }
 
-func NewFirebaseConfig() (*FirebaseConfig, error) {
-	empty := &FirebaseConfig{}
+func newFirebaseConfig() (*firebaseConfig, error) {
+	empty := &firebaseConfig{}
 
-	gcloud_user := GetOptionalEnv(GCLOUD_USER)
-	gcloud_project := GetOptionalEnv(GCLOUD_PROJECT)
+	gcloudUser := getOptionalEnv(gcloudUser)
+	gcloudProject := getOptionalEnv(gcloudProject)
 
-	app_apk, err := GetRequiredEnv(APP_APK)
+	appApk, err := getRequiredEnv(appApk)
 	if err != nil {
 		return empty, err
 	}
 
-	err = FileExists(app_apk)
+	err = fileExists(appApk)
 	if err != nil {
 		return empty, err
 	}
 
-	test_apk := GetOptionalEnv(TEST_APK)
-	if !IsEmpty(test_apk) {
-		err = FileExists(test_apk)
+	testApk := getOptionalEnv(testApk)
+	if !isEmpty(testApk) {
+		err = fileExists(testApk)
 		if err != nil {
 			return empty, err
 		}
 	}
 
-	gcloud_key_base64, err := GetRequiredEnv(GCLOUD_KEY)
+	gcloudKeyBase64, err := getRequiredEnv(gcloudKey)
 	if err != nil {
 		return empty, err
 	}
 
-	gcloud_key, err := base64.StdEncoding.DecodeString(gcloud_key_base64)
+	gcloudKey, err := base64.StdEncoding.DecodeString(gcloudKeyBase64)
 	if err != nil {
 		return empty, err
 	}
 
-	empty_gcloud_user := IsEmpty(gcloud_user)
-	empty_gcloud_project := IsEmpty(gcloud_project)
+	emptyGcloudUser := isEmpty(gcloudUser)
+	emptyGcloudProject := isEmpty(gcloudProject)
 
-	if empty_gcloud_user || empty_gcloud_project {
-		parsedKeyFile := GcloudKeyFile{}
-		err = json.Unmarshal([]byte(gcloud_key), &parsedKeyFile)
+	if emptyGcloudUser || emptyGcloudProject {
+		parsedKeyFile := gcloudKeyFile{}
+		err = json.Unmarshal([]byte(gcloudKey), &parsedKeyFile)
 		if err != nil {
 			return empty, err
 		}
 
-		if empty_gcloud_user {
-			gcloud_user = parsedKeyFile.ClientEmail
-			if IsEmpty(gcloud_user) {
-				return empty, errors.New("GCLOUD_USER not defined in env or gcloud key")
+		if emptyGcloudUser {
+			gcloudUser = parsedKeyFile.ClientEmail
+			if isEmpty(gcloudUser) {
+				return empty, errors.New("gcloudUser not defined in env or gcloud key")
 
 			}
 		}
 
-		if empty_gcloud_project {
-			gcloud_project = parsedKeyFile.ProjectID
-			if IsEmpty(gcloud_project) {
-				return empty, errors.New("GCLOUD_PROJECT not defined in env or gcloud key")
+		if emptyGcloudProject {
+			gcloudProject = parsedKeyFile.ProjectID
+			if isEmpty(gcloudProject) {
+				return empty, errors.New("gcloudProject not defined in env or gcloud key")
 			}
 		}
 	}
 
-	home_dir, err := GetRequiredEnv(HOME)
+	homeDir, err := getRequiredEnv(home)
 	if err != nil {
 		return empty, err
 	}
 
-	key_file_path := path.Join(home_dir, "gcloudkey.json")
-	err = ioutil.WriteFile(key_file_path, gcloud_key, 0644)
+	keyFilePath := path.Join(homeDir, "gcloudkey.json")
+	err = ioutil.WriteFile(keyFilePath, gcloudKey, 0644)
 	if err != nil {
 		return empty, err
 	}
 
-	gcloud_bucket_value, err := GetRequiredEnv(GCLOUD_BUCKET)
+	gcloudBucketValue, err := getRequiredEnv(gcloudBucket)
 	if err != nil {
 		return empty, err
 	}
 
-	gcloud_options_value := GetOptionalEnv(GCLOUD_OPTIONS)
+	gcloudOptionsValue := getOptionalEnv(gcloudOptions)
 
-	return &FirebaseConfig{
-		ResultsBucket: gcloud_bucket_value,
-		User:          gcloud_user,
-		Project:       gcloud_project,
-		KeyPath:       key_file_path,
-		AppApk:        app_apk,
-		TestApk:       test_apk,
-		Options:       gcloud_options_value,
+	return &firebaseConfig{
+		ResultsBucket: gcloudBucketValue,
+		User:          gcloudUser,
+		Project:       gcloudProject,
+		KeyPath:       keyFilePath,
+		AppApk:        appApk,
+		TestApk:       testApk,
+		Options:       gcloudOptionsValue,
 		Debug:         false,
 	}, nil
 }
 
 func exportGcsDir(bucket string, object string) error {
-	gcs_results_dir := "gs://" + bucket + "/" + object
-	fmt.Println("Exporting ", GCS_RESULTS_DIR, " ", gcs_results_dir)
-	cmdLog, err := exec.Command("bitrise", "envman", "add", "--key", GCS_RESULTS_DIR, "--value", gcs_results_dir).CombinedOutput()
+	gcsResultsDir := "gs://" + bucket + "/" + object
+	fmt.Println("Exporting ", gcsResultsDir, " ", gcsResultsDir)
+	cmdLog, err := exec.Command("bitrise", "envman", "add", "--key", gcsResultsDir, "--value", gcsResultsDir).CombinedOutput()
 	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to export "+GCS_RESULTS_DIR+", error: %#v | output: %s", err.Error(), cmdLog))
+		return fmt.Errorf("Failed to export "+gcsResultsDir+", error: %#v | output: %s", err.Error(), cmdLog)
 	}
 
 	return nil
 }
 
-func buildGcloudCommand(config *FirebaseConfig, gcs_object string) ([]string, error) {
+func buildGcloudCommand(config *firebaseConfig, gcsObject string) ([]string, error) {
 	empty := make([]string, 0)
 	if !config.Debug {
-		err := RunCommand("gcloud config set project " + config.Project)
+		err := runCommand("gcloud config set project " + config.Project)
 		if err != nil {
 			return empty, err
 		}
 
-		err = RunCommand("gcloud auth activate-service-account --key-file " + config.KeyPath + " " + config.User)
+		err = runCommand("gcloud auth activate-service-account --key-file " + config.KeyPath + " " + config.User)
 		if err != nil {
 			return empty, err
 		}
@@ -151,41 +151,41 @@ func buildGcloudCommand(config *FirebaseConfig, gcs_object string) ([]string, er
 		return empty, err
 	}
 
-	userOptionsSet := GcloudOptionsToSet(userOptionsSlice)
+	userOptionsSet := gcloudOptionsToSet(userOptionsSlice)
 
 	// Set --app, --test, --results-bucket, --results-dir and test type
 	// Use user values for flags if supplied.
 	args := make([]string, 0)
 	args = append(args, "gcloud", "firebase", "test", "android", "run")
 
-	const TYPE_FLAG = "--type"
-	const TEST_FLAG = "--test"
-	const APP_FLAG = "--app"
-	const RESULTS_BUCKET_FLAG = "--results-bucket="
-	const RESULTS_DIR_FLAG = "--results-dir="
+	const TypeFlag = "--type"
+	const TestFlag = "--test"
+	const AppFlag = "--app"
+	const ResultsBucketFlag = "--results-bucket="
+	const ResultsDirFlag = "--results-dir="
 
-	if IsEmpty(config.TestApk) {
-		args = append(args, TYPE_FLAG, "robo")
+	if isEmpty(config.TestApk) {
+		args = append(args, TypeFlag, "robo")
 	} else {
-		args = append(args, TYPE_FLAG, "instrumentation")
-		if !userOptionsSet[TEST_FLAG] {
+		args = append(args, TypeFlag, "instrumentation")
+		if !userOptionsSet[TestFlag] {
 			args = append(args, "--test", config.TestApk)
 		}
 	}
 
-	if !userOptionsSet[APP_FLAG] {
-		args = append(args, APP_FLAG, config.AppApk)
+	if !userOptionsSet[AppFlag] {
+		args = append(args, AppFlag, config.AppApk)
 	}
-	if !userOptionsSet[RESULTS_BUCKET_FLAG] {
-		args = append(args, RESULTS_BUCKET_FLAG+config.ResultsBucket)
+	if !userOptionsSet[ResultsBucketFlag] {
+		args = append(args, ResultsBucketFlag+config.ResultsBucket)
 	}
-	if !userOptionsSet[RESULTS_DIR_FLAG] {
-		args = append(args, RESULTS_DIR_FLAG+gcs_object)
+	if !userOptionsSet[ResultsDirFlag] {
+		args = append(args, ResultsDirFlag+gcsObject)
 	}
 
 	// Don't export results bucket when it's user defined.
-	if !userOptionsSet[RESULTS_BUCKET_FLAG] || !userOptionsSet[RESULTS_DIR_FLAG] {
-		err = exportGcsDir(config.ResultsBucket, gcs_object)
+	if !userOptionsSet[ResultsBucketFlag] || !userOptionsSet[ResultsDirFlag] {
+		err = exportGcsDir(config.ResultsBucket, gcsObject)
 		if err != nil {
 			return empty, err
 		}
@@ -200,25 +200,25 @@ func buildGcloudCommand(config *FirebaseConfig, gcs_object string) ([]string, er
 }
 
 func main() {
-	config, err := NewFirebaseConfig()
-	FatalError(err)
+	config, err := newFirebaseConfig()
+	fatalError(err)
 
-	gcsCommand, err := buildGcloudCommand(config, NewGcsObjectName())
-	FatalError(err)
+	gcsCommand, err := buildGcloudCommand(config, newGcsObjectName())
+	fatalError(err)
 
 	log.Printf(command.PrintableCommandArgs(false, gcsCommand))
 	fmt.Println()
 
-	const INFRASTRUCTURE_FAILURE = 20
-	const TRY_COUNT = 3
+	const InfrastructureFailure = 20
+	const TryCount = 3
 
 	// Note that gcloud CLI has a transparent retry of 3.
 	// Retrying 3x here means we try up to 9 times in total.
-	for i := 1; i <= TRY_COUNT; i++ {
-		exit_code, err := RunCommandSlice(gcsCommand)
-		FatalError(err)
+	for i := 1; i <= TryCount; i++ {
+		exitCode, err := runCommandSlice(gcsCommand)
+		fatalError(err)
 
-		if exit_code != INFRASTRUCTURE_FAILURE {
+		if exitCode != InfrastructureFailure {
 			break
 		}
 	}
