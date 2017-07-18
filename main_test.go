@@ -19,23 +19,23 @@ import (
 // testApk       // Optional
 // gcloudKey     // Required
 
-const Path = "Path"
+const Path = "PATH"
 
 // envman complains if the .envstore doesn't exist however we don't want to check it into git
 func init() {
 	WriteFile(".envstore.yml")
-	gcloudKey := base64.StdEncoding.EncodeToString([]byte(`{"project_id": "fake-project","client_email": "fake@example.com"}`))
+	gcloudKeyValue := base64.StdEncoding.EncodeToString([]byte(`{"project_id": "fake-project","client_email": "fake@example.com"}`))
 
-	Setenv(gcloudKey, gcloudKey)
+	Setenv(gcloudKey, gcloudKeyValue)
 }
 
 func resetEnv() {
-	home := os.Getenv(home)
-	path := os.Getenv(Path)
+	homeValue := os.Getenv(home)
+	pathValue := os.Getenv(Path)
 
 	os.Clearenv()
-	Setenv(home, home)
-	Setenv(Path, path)
+	Setenv(home, homeValue)
+	Setenv(Path, pathValue)
 }
 
 func TestFileExists(t *testing.T) {
@@ -70,11 +70,11 @@ func TestGetRequiredEnv(t *testing.T) {
 
 func TestExecuteGcloud(t *testing.T) {
 	assert := assert.New(t)
-	gcloudKey, err := getRequiredEnv(gcloudKey)
+	gcloudKeyValue, err := getRequiredEnv(gcloudKey)
 	assert.NoError(err)
 
 	resetEnv()
-	Setenv(gcloudKey, gcloudKey)
+	Setenv(gcloudKey, gcloudKeyValue)
 
 	Setenv(gcloudBucket, "golang-bucket")
 	Setenv(gcloudOptions, `--device-ids NexusLowRes
@@ -128,11 +128,11 @@ func WriteFile(filePath string) {
 
 func TestExecuteGcloudUserOverrides(t *testing.T) {
 	assert := assert.New(t)
-	gcloudKey, err := getRequiredEnv(gcloudKey)
+	gcloudKeyValue, err := getRequiredEnv(gcloudKey)
 	assert.NoError(err)
 
 	resetEnv()
-	Setenv(gcloudKey, gcloudKey)
+	Setenv(gcloudKey, gcloudKeyValue)
 
 	// when user sets --test, --app, --results-bucket=, and --results-dir= then
 	// we should use those values.
@@ -186,11 +186,11 @@ func TestExecuteGcloudUserOverrides(t *testing.T) {
 
 func TestExecuteGcloudRobo(t *testing.T) {
 	assert := assert.New(t)
-	gcloudKey, err := getRequiredEnv(gcloudKey)
+	gcloudKeyValue, err := getRequiredEnv(gcloudKey)
 	assert.NoError(err)
 
 	resetEnv()
-	Setenv(gcloudKey, gcloudKey)
+	Setenv(gcloudKey, gcloudKeyValue)
 
 	// when user sets --test, --app, --results-bucket=, and --results-dir= then
 	// we should use thoe values.
@@ -239,7 +239,7 @@ func TestNewFirebaseConfig(t *testing.T) {
 
 	//- appApk missing
 	_, err = newFirebaseConfig()
-	assert.EqualError(err, "appApk is not defined!")
+	assert.EqualError(err, appApk+" is not defined!")
 
 	//- appApk pointing to non-existent file
 	Setenv(appApk, "/tmp/nope")
@@ -249,23 +249,23 @@ func TestNewFirebaseConfig(t *testing.T) {
 	//- gcloudKey missing
 	Setenv(appApk, "/tmp")
 	_, err = newFirebaseConfig()
-	assert.EqualError(err, "gcloudKey is not defined!")
+	assert.EqualError(err, gcloudKey+" is not defined!")
 	Setenv(gcloudKey, "e30K") // {} base64 encoded
 
 	//- gcloud_user not defined in env or key
 	_, err = newFirebaseConfig()
-	assert.EqualError(err, "gcloudUser not defined in env or gcloud key")
+	assert.EqualError(err, gcloudUser+" not defined in env or gcloud key")
 	Setenv(gcloudUser, "1234")
 
 	//- gcloud_project not defined in env or key
 	_, err = newFirebaseConfig()
-	assert.EqualError(err, "gcloudProject not defined in env or gcloud key")
+	assert.EqualError(err, gcloudProject+" not defined in env or gcloud key")
 	Setenv(gcloudProject, "1234")
 
 	//- gcloudBucket missing
 	Setenv(gcloudKey, "1234")
 	_, err = newFirebaseConfig()
-	assert.EqualError(err, "gcloudBucket is not defined!")
+	assert.EqualError(err, gcloudBucket+" is not defined!")
 
 	//- testApk pointing to non-existent file
 	Setenv(gcloudOptions, "1234")
@@ -275,11 +275,11 @@ func TestNewFirebaseConfig(t *testing.T) {
 	Setenv(testApk, "")
 
 	//- home missing
-	home := os.Getenv(home)
+	homeValue := os.Getenv(home)
 	Setenv(home, "")
 	_, err = newFirebaseConfig()
-	assert.EqualError(err, "home is not defined!")
-	Setenv(home, home)
+	assert.EqualError(err, home+" is not defined!")
+	Setenv(home, homeValue)
 
 	//- gcloudKey invalid base64
 	Setenv(gcloudKey, " ")
@@ -291,5 +291,5 @@ func TestNewFirebaseConfig(t *testing.T) {
 	Setenv(home, "/does/not/exist")
 	_, err = newFirebaseConfig()
 	assert.EqualError(err, "open /does/not/exist/gcloudkey.json: no such file or directory")
-	Setenv(home, home)
+	Setenv(home, homeValue)
 }

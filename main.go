@@ -14,7 +14,9 @@ import (
 	"path"
 )
 
-type gcloudKeyFile struct {
+// GcloudKeyFile defines the project id & user
+// must be exported for json.Unmarshal
+type GcloudKeyFile struct {
 	ProjectID   string `json:"project_id"`
 	ClientEmail string `json:"client_email"`
 }
@@ -33,8 +35,8 @@ type firebaseConfig struct {
 func newFirebaseConfig() (*firebaseConfig, error) {
 	empty := &firebaseConfig{}
 
-	gcloudUser := getOptionalEnv(gcloudUser)
-	gcloudProject := getOptionalEnv(gcloudProject)
+	gcloudUserValue := getOptionalEnv(gcloudUser)
+	gcloudProjectValue := getOptionalEnv(gcloudProject)
 
 	appApk, err := getRequiredEnv(appApk)
 	if err != nil {
@@ -64,28 +66,28 @@ func newFirebaseConfig() (*firebaseConfig, error) {
 		return empty, err
 	}
 
-	emptyGcloudUser := isEmpty(gcloudUser)
-	emptyGcloudProject := isEmpty(gcloudProject)
+	emptyGcloudUser := isEmpty(gcloudUserValue)
+	emptyGcloudProject := isEmpty(gcloudProjectValue)
 
 	if emptyGcloudUser || emptyGcloudProject {
-		parsedKeyFile := gcloudKeyFile{}
+		parsedKeyFile := GcloudKeyFile{}
 		err = json.Unmarshal([]byte(gcloudKey), &parsedKeyFile)
 		if err != nil {
 			return empty, err
 		}
 
 		if emptyGcloudUser {
-			gcloudUser = parsedKeyFile.ClientEmail
-			if isEmpty(gcloudUser) {
-				return empty, errors.New("gcloudUser not defined in env or gcloud key")
+			gcloudUserValue = parsedKeyFile.ClientEmail
+			if isEmpty(gcloudUserValue) {
+				return empty, errors.New(gcloudUser + " not defined in env or gcloud key")
 
 			}
 		}
 
 		if emptyGcloudProject {
-			gcloudProject = parsedKeyFile.ProjectID
-			if isEmpty(gcloudProject) {
-				return empty, errors.New("gcloudProject not defined in env or gcloud key")
+			gcloudProjectValue = parsedKeyFile.ProjectID
+			if isEmpty(gcloudProjectValue) {
+				return empty, errors.New(gcloudProject + " not defined in env or gcloud key")
 			}
 		}
 	}
@@ -110,8 +112,8 @@ func newFirebaseConfig() (*firebaseConfig, error) {
 
 	return &firebaseConfig{
 		ResultsBucket: gcloudBucketValue,
-		User:          gcloudUser,
-		Project:       gcloudProject,
+		User:          gcloudUserValue,
+		Project:       gcloudProjectValue,
 		KeyPath:       keyFilePath,
 		AppApk:        appApk,
 		TestApk:       testApk,
