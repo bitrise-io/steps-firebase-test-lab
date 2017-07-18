@@ -35,28 +35,28 @@ type firebaseConfig struct {
 func newFirebaseConfig() (*firebaseConfig, error) {
 	empty := &firebaseConfig{}
 
-	gcloudUserValue := getOptionalEnv(gcloudUser)
-	gcloudProjectValue := getOptionalEnv(gcloudProject)
+	gcloudUserValue := getOptionalEnv(envKeyGcloudUser)
+	gcloudProjectValue := getOptionalEnv(envKeyGcloudProject)
 
-	appApk, err := getRequiredEnv(appApk)
+	appApkValue, err := getRequiredEnv(envKeyAppApk)
 	if err != nil {
 		return empty, err
 	}
 
-	err = fileExists(appApk)
+	err = fileExists(appApkValue)
 	if err != nil {
 		return empty, err
 	}
 
-	testApk := getOptionalEnv(testApk)
-	if !isEmpty(testApk) {
-		err = fileExists(testApk)
+	testApkValue := getOptionalEnv(envKeyTestApk)
+	if !isEmpty(testApkValue) {
+		err = fileExists(testApkValue)
 		if err != nil {
 			return empty, err
 		}
 	}
 
-	gcloudKeyBase64, err := getRequiredEnv(gcloudKey)
+	gcloudKeyBase64, err := getRequiredEnv(envKeyGcloud)
 	if err != nil {
 		return empty, err
 	}
@@ -79,7 +79,7 @@ func newFirebaseConfig() (*firebaseConfig, error) {
 		if emptyGcloudUser {
 			gcloudUserValue = parsedKeyFile.ClientEmail
 			if isEmpty(gcloudUserValue) {
-				return empty, errors.New(gcloudUser + " not defined in env or gcloud key")
+				return empty, errors.New(envKeyGcloudUser + " not defined in env or gcloud key")
 
 			}
 		}
@@ -87,12 +87,12 @@ func newFirebaseConfig() (*firebaseConfig, error) {
 		if emptyGcloudProject {
 			gcloudProjectValue = parsedKeyFile.ProjectID
 			if isEmpty(gcloudProjectValue) {
-				return empty, errors.New(gcloudProject + " not defined in env or gcloud key")
+				return empty, errors.New(envKeyGcloudProject + " not defined in env or gcloud key")
 			}
 		}
 	}
 
-	homeDir, err := getRequiredEnv(home)
+	homeDir, err := getRequiredEnv(envKeyHome)
 	if err != nil {
 		return empty, err
 	}
@@ -103,20 +103,20 @@ func newFirebaseConfig() (*firebaseConfig, error) {
 		return empty, err
 	}
 
-	gcloudBucketValue, err := getRequiredEnv(gcloudBucket)
+	gcloudBucketValue, err := getRequiredEnv(envKeyGcloudBucket)
 	if err != nil {
 		return empty, err
 	}
 
-	gcloudOptionsValue := getOptionalEnv(gcloudOptions)
+	gcloudOptionsValue := getOptionalEnv(envKeyGcloudOptions)
 
 	return &firebaseConfig{
 		ResultsBucket: gcloudBucketValue,
 		User:          gcloudUserValue,
 		Project:       gcloudProjectValue,
 		KeyPath:       keyFilePath,
-		AppApk:        appApk,
-		TestApk:       testApk,
+		AppApk:        appApkValue,
+		TestApk:       testApkValue,
 		Options:       gcloudOptionsValue,
 		Debug:         false,
 	}, nil
