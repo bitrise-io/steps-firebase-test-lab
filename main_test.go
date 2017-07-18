@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"encoding/base64"
 )
 
 // os.Exit(1) = test passes.
@@ -23,6 +24,9 @@ const PATH = "PATH"
 // envman complains if the .envstore doesn't exist however we don't want to check it into git
 func init() {
 	WriteFile(".envstore.yml")
+    gcloud_key := base64.StdEncoding.EncodeToString([]byte(`{"project_id": "fake-project","client_email": "fake@example.com"}`))
+
+	Setenv(GCLOUD_KEY, gcloud_key)
 }
 
 func resetEnv() {
