@@ -1,4 +1,4 @@
-# Firebase Test Lab
+# Firebase Test Lab [![Build Status](https://www.bitrise.io/app/ec7f7c07b4eb3e06/status.svg?token=ghj255CCa9A_ebf9C2jskA&branch=master)](https://www.bitrise.io/app/ec7f7c07b4eb3e06)
 
 Firebase Test Lab for Android allows testing Android apps in the cloud
 
