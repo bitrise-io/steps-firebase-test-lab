@@ -123,9 +123,10 @@ func newFirebaseConfig() (*firebaseConfig, error) {
 }
 
 func exportGcsDir(bucket string, object string) error {
+    gcsResultsDirKey := "GCS_RESULTS_DIR"
 	gcsResultsDir := "gs://" + bucket + "/" + object
-	fmt.Println("Exporting ", gcsResultsDir, " ", gcsResultsDir)
-	cmdLog, err := exec.Command("bitrise", "envman", "add", "--key", gcsResultsDir, "--value", gcsResultsDir).CombinedOutput()
+	fmt.Println("Exporting ", gcsResultsDirKey, " ", gcsResultsDir)
+	cmdLog, err := exec.Command("bitrise", "envman", "add", "--key", gcsResultsDirKey, "--value", gcsResultsDir).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("Failed to export "+gcsResultsDir+", error: %#v | output: %s", err.Error(), cmdLog)
 	}
